@@ -154,6 +154,17 @@ public class VirtualControllerConfigurationLoader {
         return new RightAnalogStick(controller, context);
     }
 
+    private static AnalogStickFree createLeftStick2(
+            final VirtualController controller,
+            final Context context) {
+        return new LeftAnalogStickFree(controller, context);
+    }
+
+    private static AnalogStickFree createRightStick2(
+            final VirtualController controller,
+            final Context context) {
+        return new RightAnalogStickFree(controller, context);
+    }
 
     private static final int TRIGGER_L_BASE_X = 1;
     private static final int TRIGGER_R_BASE_X = 92;
@@ -281,19 +292,35 @@ public class VirtualControllerConfigurationLoader {
                     screenScale(TRIGGER_HEIGHT, height)
             );
 
-            controller.addElement(createLeftStick(controller, context),
-                    screenScale(ANALOG_L_BASE_X, height),
-                    screenScale(ANALOG_L_BASE_Y, height),
-                    screenScale(ANALOG_SIZE, height),
-                    screenScale(ANALOG_SIZE, height)
-            );
+            if(config.enableFreeAnalogStick){
+                controller.addElement(createLeftStick2(controller, context),
+                        screenScale(ANALOG_L_BASE_X, height),
+                        screenScale(ANALOG_L_BASE_Y, height),
+                        screenScale(ANALOG_SIZE, height),
+                        screenScale(ANALOG_SIZE, height)
+                );
 
-            controller.addElement(createRightStick(controller, context),
-                    screenScale(ANALOG_R_BASE_X, height) + rightDisplacement,
-                    screenScale(ANALOG_R_BASE_Y, height),
-                    screenScale(ANALOG_SIZE, height),
-                    screenScale(ANALOG_SIZE, height)
-            );
+                controller.addElement(createRightStick2(controller, context),
+                        screenScale(ANALOG_R_BASE_X, height) + rightDisplacement,
+                        screenScale(ANALOG_R_BASE_Y, height),
+                        screenScale(ANALOG_SIZE, height),
+                        screenScale(ANALOG_SIZE, height)
+                );
+            }else{
+                controller.addElement(createLeftStick(controller, context),
+                        screenScale(ANALOG_L_BASE_X, height),
+                        screenScale(ANALOG_L_BASE_Y, height),
+                        screenScale(ANALOG_SIZE, height),
+                        screenScale(ANALOG_SIZE, height)
+                );
+
+                controller.addElement(createRightStick(controller, context),
+                        screenScale(ANALOG_R_BASE_X, height) + rightDisplacement,
+                        screenScale(ANALOG_R_BASE_Y, height),
+                        screenScale(ANALOG_SIZE, height),
+                        screenScale(ANALOG_SIZE, height)
+                );
+            }
 
             controller.addElement(createDigitalButton(
                     VirtualControllerElement.EID_BACK,

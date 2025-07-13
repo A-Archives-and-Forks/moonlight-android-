@@ -43,6 +43,8 @@ public class PreferenceConfiguration {
     private static final String USB_DRIVER_PREF_SRING = "checkbox_usb_driver";
     private static final String VIDEO_FORMAT_PREF_STRING = "video_format";
     private static final String ONSCREEN_CONTROLLER_PREF_STRING = "checkbox_show_onscreen_controls";
+    private static final String CHECKBOX_ENABLE_FREE_ANALOG_STICK = "checkbox_enable_free_analog_stick";
+    private static final String ANALOG_STICK_OPACITY_PREF_STRING = "seekbar_osc_free_analog_stick_opacity";
     private static final String ONLY_L3_R3_PREF_STRING = "checkbox_only_show_L3R3";
     private static final String LEGACY_DISABLE_FRAME_DROP_PREF_STRING = "checkbox_disable_frame_drop";
     private static final String ENABLE_HDR_PREF_STRING = "checkbox_enable_hdr";
@@ -82,6 +84,8 @@ public class PreferenceConfiguration {
     private static final String DEFAULT_VIDEO_FORMAT = "auto";
 
     private static final boolean ONSCREEN_CONTROLLER_DEFAULT = false;
+    private static final boolean CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT = false;
+    private static final int DEFAULT_FREE_ANALOG_STICK_OPACITY = 20;
     private static final boolean ONLY_L3_R3_DEFAULT = false;
     private static final boolean DEFAULT_ENABLE_HDR = false;
     private static final boolean DEFAULT_ENABLE_PIP = false;
@@ -129,6 +133,8 @@ public class PreferenceConfiguration {
     public String language;
     public boolean smallIconMode, multiController, usbDriver, flipFaceButtons;
     public boolean onscreenController;
+    public boolean enableFreeAnalogStick;
+    public int enableNewAnalogStickOpacity;
     public boolean onlyL3R3;
     public boolean enableHdr;
     public boolean enablePip;
@@ -576,6 +582,8 @@ public class PreferenceConfiguration {
         config.multiController = prefs.getBoolean(MULTI_CONTROLLER_PREF_STRING, DEFAULT_MULTI_CONTROLLER);
         config.usbDriver = prefs.getBoolean(USB_DRIVER_PREF_SRING, DEFAULT_USB_DRIVER);
         config.onscreenController = prefs.getBoolean(ONSCREEN_CONTROLLER_PREF_STRING, ONSCREEN_CONTROLLER_DEFAULT);
+        config.enableFreeAnalogStick=prefs.getBoolean(CHECKBOX_ENABLE_FREE_ANALOG_STICK,CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT);
+        config.enableNewAnalogStickOpacity = prefs.getInt(ANALOG_STICK_OPACITY_PREF_STRING,DEFAULT_FREE_ANALOG_STICK_OPACITY);
         config.onlyL3R3 = prefs.getBoolean(ONLY_L3_R3_PREF_STRING, ONLY_L3_R3_DEFAULT);
         config.enableHdr = prefs.getBoolean(ENABLE_HDR_PREF_STRING, DEFAULT_ENABLE_HDR) && !isShieldAtvFirmwareWithBrokenHdr();
         config.enablePip = prefs.getBoolean(ENABLE_PIP_PREF_STRING, DEFAULT_ENABLE_PIP);

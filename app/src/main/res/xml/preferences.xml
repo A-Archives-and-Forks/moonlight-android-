@@ -156,23 +156,22 @@
             android:key="checkbox_show_onscreen_controls"
             android:summary="@string/summary_checkbox_show_onscreen_controls"
             android:title="@string/title_checkbox_show_onscreen_controls" />
+        <com.limelight.preferences.SeekBarPreference
+            android:key="seekbar_osc_analog_stick_deadzone"
+            android:dependency="checkbox_show_onscreen_controls"
+            android:title="@string/title_osc_analog_stick_deadzone"
+            android:summary="@string/summary_osc_analog_stick_deadzone"
+            android:dialogMessage="@string/summary_osc_analog_stick_deadzone"
+            android:defaultValue="30"
+            android:max="75"
+            android:text="@string/suffix_osc_opacity"
+            seekbar:min="0" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:dependency="checkbox_show_onscreen_controls"
             android:key="checkbox_enable_free_analog_stick"
             android:summary="@string/summary_free_analog_stick"
             android:title="@string/title_free_analog_stick" />
-        <com.limelight.preferences.SeekBarPreference
-            android:defaultValue="20"
-            android:dependency="checkbox_enable_free_analog_stick"
-            android:dialogMessage="@string/summary_osc_opacity"
-            android:key="seekbar_osc_free_analog_stick_opacity"
-            android:max="100"
-            android:summary="@string/summary_free_analog_stick_opacity"
-            android:text="@string/suffix_osc_opacity"
-            android:title="@string/title_free_analog_stick_opacity"
-            seekbar:min="0"
-            seekbar:step="1" />
         <CheckBoxPreference
             android:key="checkbox_vibrate_osc"
             android:dependency="checkbox_show_onscreen_controls"

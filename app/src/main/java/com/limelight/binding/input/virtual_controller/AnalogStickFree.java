@@ -138,10 +138,6 @@ public class AnalogStickFree extends VirtualControllerElement {
     private float touchX;
     private float touchY;
 
-    private float touchMaxDistance = 120;
-    private float touchDeadZone = 20;
-    private float fDeadzoneSave = 0.01f;
-
     protected String strStickSide = "L";
 
     private static double getMovementRadius(float x, float y) {
@@ -226,101 +222,68 @@ public class AnalogStickFree extends VirtualControllerElement {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         // calculate new radius sizes depending
         radius_complete = getPercent(getCorrectWidth() / 2, 100) - 2 * getDefaultStrokeWidth();
-        radius_dead_zone = getPercent(getCorrectWidth() / 2, 30);
+
+        int deadzonePercentage = PreferenceConfiguration.readPreferences(getContext()).virtualAnalogDeadzonePercentage;
+        // calculate deadzone based of Preferences
+        float minDeadzonePercent = 0f;
+        float maxDeadzonePercent = 75f;
+        float deadzonePercent = minDeadzonePercent + (maxDeadzonePercent - minDeadzonePercent) * (deadzonePercentage / 100f);
+
+        radius_dead_zone = getPercent(getCorrectWidth() / 2, deadzonePercent);
         radius_analog_stick = getPercent(getCorrectWidth() / 2, 20);
+
+        position_stick_x = w / 2f;
+        position_stick_y = h / 2f;
 
         super.onSizeChanged(w, h, oldw, oldh);
     }
 
-
     @Override
     protected void onElementDraw(Canvas canvas) {
-        boolean bIsMoving = virtualController.getControllerMode() == VirtualController.ControllerMode.MoveButtons;
-        boolean bIsResizing = virtualController.getControllerMode() == VirtualController.ControllerMode.ResizeButtons;
-
-        if (bIsMoving || bIsResizing) {
-            canvas.drawColor(getDefaultColor());
-            paint.setColor(Color.WHITE);
-            int nWidth = getWidth();
-            int nHeight = getHeight();
-
-            paint.setStyle(Paint.Style.FILL);
-            paint.setTextSize(Math.min(nWidth, nHeight) / 2);
-            canvas.drawText(strStickSide, nWidth / 2, nHeight / 2, paint);
-        }
+        // set transparent background
+        canvas.drawColor(Color.TRANSPARENT);
 
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(getDefaultStrokeWidth());
 
-        if (bIsFingerOnScreen) {
-            // set transparent background
-            canvas.drawColor(Color.TRANSPARENT);
-            //canvas.drawCircle(touchX, touchY, 50, paint);
+        // determine center point
+        float centerX = bIsFingerOnScreen ? touchStartX : getWidth() / 2f;
+        float centerY = bIsFingerOnScreen ? touchStartY : getHeight() / 2f;
 
-            // draw outer circle
-//            if (!isPressed() || click_state == CLICK_STATE.SINGLE) {
-//                //paint.setColor(getDefaultColor());
-//            } else {
-//                //paint.setColor(pressedColor);
-//            }
-//            //canvas.drawCircle(getWidth() / 2, getHeight() / 2, radius_complete, paint);
-//
-//            //paint.setColor(getDefaultColor());
-//            // draw dead zone
-//            //canvas.drawCircle(getWidth() / 2, getHeight() / 2, radius_dead_zone, paint);
-            // draw stick depending on state
-            switch (stick_state) {
-                case NO_MOVEMENT: {
-                    paint.setColor(Color.MAGENTA);
-                    canvas.drawCircle(getWidth() / 2, getHeight() / 2, radius_analog_stick, paint);
-                    break;
-                }
+        // determine stick position
+        float handleX = bIsFingerOnScreen ? position_stick_x : centerX;
+        float handleY = bIsFingerOnScreen ? position_stick_y : centerY;
 
-                case MOVED_IN_DEAD_ZONE:
-                case MOVED_ACTIVE: {
+        // draw outer circle
+        if (!isPressed() || click_state == CLICK_STATE.SINGLE) {
+            paint.setColor(getDefaultColor());
+        } else {
+            paint.setColor(pressedColor);
+        }
+        canvas.drawCircle(centerX, centerY, radius_complete, paint);
 
-                    paint.setColor(bgCircleColor);
+        paint.setColor(getDefaultColor());
+        // draw dead zone
+        canvas.drawCircle(centerX, centerY, radius_dead_zone, paint);
 
-                    paint.setStyle(Paint.Style.FILL_AND_STROKE);
-
-                    canvas.drawCircle(touchStartX, touchStartY, radius_complete, paint);
-
-                    paint.setStyle(Paint.Style.STROKE);
-
-                    paint.setColor(strokeCircleColor);
-
-                    // draw start touch point circle
-                    canvas.drawCircle(touchStartX, touchStartY, radius_dead_zone, paint);
-                    //paint.setColor(Color.RED);
-                    // line from start point to current touch point
-//                    canvas.drawLine(touchStartX, touchStartY, position_stick_x, position_stick_y, paint);
-
-                    //paint.setColor(pressedColor);
-                    canvas.drawCircle(position_stick_x, position_stick_y, radius_analog_stick, paint);
-//                    float distance = (float) Math.sqrt(Math.pow(touchStartY - position_stick_y, 2) + Math.pow(touchStartX - position_stick_x, 2));
-
-//                    canvas.drawCircle(touchStartX, touchStartY, touchMaxDistance, paint);
-                    break;
-                }
+        // draw stick depending on state
+        switch (stick_state) {
+            case NO_MOVEMENT: {
+                paint.setColor(getDefaultColor());
+                canvas.drawCircle(centerX, centerY, radius_analog_stick, paint);
+                break;
+            }
+            case MOVED_IN_DEAD_ZONE:
+            case MOVED_ACTIVE: {
+                paint.setColor(pressedColor);
+                canvas.drawCircle(handleX, handleY, radius_analog_stick, paint);
+                break;
             }
         }
     }
 
-    private int bgCircleColor=0x2BF5F5F9;
-    private int strokeCircleColor=0xFF8F8F8F;
-    public void setBgOpacity() {
-        int hexOpacity = PreferenceConfiguration.readPreferences(getContext()).enableNewAnalogStickOpacity * 255 / 100;
-        this.bgCircleColor = (hexOpacity << 24) | (bgCircleColor & 0x00FFFFFF);
-        this.strokeCircleColor = (hexOpacity << 24) | (pressedColor & 0x00FFFFFF);
-        invalidate();
-    }
-    @Override
-    public void setOpacity(int opacity) {
-        super.setOpacity(opacity);
-        setBgOpacity();
-    }
-
     private void updatePosition(long eventTime) {
+        // get 100% way
         float complete = radius_complete - radius_analog_stick;
 
         // calculate relative way
@@ -376,6 +339,17 @@ public class AnalogStickFree extends VirtualControllerElement {
                     touchID = event.getPointerId(event.getActionIndex());
                     touchStartX = event.getX();
                     touchStartY = event.getY();
+
+                    // set stick position to touchpoint
+                    position_stick_x = touchStartX;
+                    position_stick_y = touchStartY;
+
+                    // reset relative movement
+                    relative_x = 0;
+                    relative_y = 0;
+                    movement_radius = 0;
+                    movement_angle = 0;
+
                     bIsFingerOnScreen = true;
                 }
 
@@ -383,9 +357,8 @@ public class AnalogStickFree extends VirtualControllerElement {
                     touchX = event.getX();
                     touchY = event.getY();
 
-                    // set to dead zoned, will be corrected in update position if necessary
                     stick_state = STICK_STATE.MOVED_IN_DEAD_ZONE;
-                    // check for double click
+
                     if (lastClickState == CLICK_STATE.SINGLE &&
                             timeLastClick + timeoutDoubleClick > System.currentTimeMillis()) {
                         click_state = CLICK_STATE.DOUBLE;
@@ -394,9 +367,8 @@ public class AnalogStickFree extends VirtualControllerElement {
                         click_state = CLICK_STATE.SINGLE;
                         notifyOnClick();
                     }
-                    // reset last click timestamp
+
                     timeLastClick = System.currentTimeMillis();
-                    // set item pressed and update
                     setPressed(true);
 
                     updatePosition(event.getEventTime());
@@ -440,72 +412,4 @@ public class AnalogStickFree extends VirtualControllerElement {
         // accept the touch event
         return true;
     }
-
-
-//    @Override
-//    public boolean onElementTouchEvent(MotionEvent event) {
-//        // save last click state
-//        AnalogStick2.CLICK_STATE lastClickState = click_state;
-//
-//        // get absolute way for each axis
-//        relative_x = -(getWidth() / 2 - event.getX());
-//        relative_y = -(getHeight() / 2 - event.getY());
-//
-//        // get radius and angel of movement from center
-//        movement_radius = getMovementRadius(relative_x, relative_y);
-//        movement_angle = getAngle(relative_x, relative_y);
-//
-//        // pass touch event to parent if out of outer circle
-//        if (movement_radius > radius_complete && !isPressed())
-//            return false;
-//
-//        // chop radius if out of outer circle or near the edge
-//        if (movement_radius > (radius_complete - radius_analog_stick)) {
-//            movement_radius = radius_complete - radius_analog_stick;
-//        }
-//
-//        // handle event depending on action
-//        switch (event.getActionMasked()) {
-//            // down event (touch event)
-//            case MotionEvent.ACTION_DOWN: {
-//                // set to dead zoned, will be corrected in update position if necessary
-//                stick_state = AnalogStick2.STICK_STATE.MOVED_IN_DEAD_ZONE;
-//                // check for double click
-//                if (lastClickState == AnalogStick2.CLICK_STATE.SINGLE &&
-//                        event.getEventTime() - timeLastClick <= timeoutDoubleClick) {
-//                    click_state = AnalogStick2.CLICK_STATE.DOUBLE;
-//                    notifyOnDoubleClick();
-//                } else {
-//                    click_state = AnalogStick2.CLICK_STATE.SINGLE;
-//                    notifyOnClick();
-//                }
-//                // reset last click timestamp
-//                timeLastClick = event.getEventTime();
-//                // set item pressed and update
-//                setPressed(true);
-//                break;
-//            }
-//            // up event (revoke touch)
-//            case MotionEvent.ACTION_CANCEL:
-//            case MotionEvent.ACTION_UP: {
-//                setPressed(false);
-//                break;
-//            }
-//        }
-//
-//        if (isPressed()) {
-//            // when is pressed calculate new positions (will trigger movement if necessary)
-//            updatePosition(event.getEventTime());
-//        } else {
-//            stick_state = AnalogStick2.STICK_STATE.NO_MOVEMENT;
-//            notifyOnRevoke();
-//
-//            // not longer pressed reset analog stick
-//            notifyOnMovement(0, 0);
-//        }
-//        // refresh view
-//        invalidate();
-//        // accept the touch event
-//        return true;
-//    }
 }

@@ -366,6 +366,68 @@ public class KeyboardTranslator implements InputManager.InputDeviceListener {
         return (short) ((KEY_PREFIX << 8) | translated);
     }
 
+    public static int getKeyEventCodeFromName(String name) {
+        switch (name) {
+            case "CTRL": case "CONTROL":
+                return KeyEvent.KEYCODE_CTRL_LEFT;
+            case "SHIFT":
+                return KeyEvent.KEYCODE_SHIFT_LEFT;
+            case "ALT":
+                return KeyEvent.KEYCODE_ALT_LEFT;
+            case "WIN": case "WINDOWS":
+                return KeyEvent.KEYCODE_META_LEFT;
+            case "ENTER":
+                return KeyEvent.KEYCODE_ENTER;
+            case "ESC": case "ESCAPE":
+                return KeyEvent.KEYCODE_ESCAPE;
+            case "TAB":
+                return KeyEvent.KEYCODE_TAB;
+            case "INSERT": case "INS":
+                return KeyEvent.KEYCODE_INSERT;
+            case "DELETE": case "DEL":
+                return KeyEvent.KEYCODE_FORWARD_DEL;
+            case "BACKSPACE":
+                return KeyEvent.KEYCODE_DEL;
+            case "SPACE":
+                return KeyEvent.KEYCODE_SPACE;
+            case "UP":
+                return KeyEvent.KEYCODE_DPAD_UP;
+            case "DOWN":
+                return KeyEvent.KEYCODE_DPAD_DOWN;
+            case "LEFT":
+                return KeyEvent.KEYCODE_DPAD_LEFT;
+            case "RIGHT":
+                return KeyEvent.KEYCODE_DPAD_RIGHT;
+            case "HOME":
+                return KeyEvent.KEYCODE_MOVE_HOME;
+            case "END":
+                return KeyEvent.KEYCODE_MOVE_END;
+            case "PAGEUP": case "PGUP":
+                return KeyEvent.KEYCODE_PAGE_UP;
+            case "PAGEDOWN": case "PGDOWN":
+                return KeyEvent.KEYCODE_PAGE_DOWN;
+            case "CAPSLOCK": case "CAPSLK":
+                return KeyEvent.KEYCODE_CAPS_LOCK;
+            default:
+                // Function keys
+                if (name.matches("F\\d{1,2}")) {
+                    int fn = Integer.parseInt(name.substring(1));
+                    if (fn >= 1 && fn <= 12) {
+                        return KeyEvent.KEYCODE_F1 + (fn - 1);
+                    }
+                }
+                // Single letter keys
+                if (name.length() == 1 && Character.isLetter(name.charAt(0))) {
+                    return KeyEvent.KEYCODE_A + (name.charAt(0) - 'A');
+                }
+                // Number keys
+                if (name.length() == 1 && Character.isDigit(name.charAt(0))) {
+                    return KeyEvent.KEYCODE_0 + (name.charAt(0) - '0');
+                }
+                return KeyEvent.KEYCODE_UNKNOWN;
+        }
+    }
+
     @Override
     public void onInputDeviceAdded(int index) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

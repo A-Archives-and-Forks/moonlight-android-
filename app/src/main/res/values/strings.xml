@@ -136,6 +136,7 @@
 
     <!-- In Game menu -->
     <string name="game_menu_toggle_keyboard">Toggle On-screen Keyboard</string>
+    <string name="game_menu_toggle_virtual_keyboard_model">Toggle On-screen full keyboard</string>
     <string name="game_menu_toggle_performance_overlay">Toggle Performance Overlay</string>
     <string name="game_menu_toggle_virtual_controller">Toggle Controller Overlay</string>
     <string name="game_menu_toggle_trackpad">Toggle Touchscreen as Trackpad</string>
@@ -327,4 +328,38 @@
     <string name="analogscroll_none">None (both sticks move the mouse)</string>
     <string name="analogscroll_right">Right analog stick</string>
     <string name="analogscroll_left">Left analog stick</string>
+
+    <string name="virtual_keyboard_hide">Hide\nKBD</string>
+
+    // custom specialkeys
+    <string name="keyboard_button">Keyboard</string>
+    <string name="game_menu_toggle_floating_button">Toggle Floating Keyboard Button</string>
+    <string name="game_menu_manage_custom_keys">Manage Custom Keys</string>
+    <string name="button_done">Done</string>
+    <string name="button_reset">Reset</string>
+    <string name="dialog_confirm_reset_title">Confirm Reset</string>
+    <string name="dialog_confirm_reset_message">Are you sure you want to reset all custom keys to default predefined keys? This cannot be undone.</string>
+    <string name="button_reset_all">Reset All</string>
+    <string name="toast_custom_keys_reset">Custom keys reset to defaults</string>
+    <string name="dialog_add_custom_key_title">Add Custom Key</string>
+    <string name="hint_enter_label">Enter label for custom key</string>
+    <string name="text_selected_keys_none">Selected Keys: None</string>
+    <string name="button_select_keys">Select Keys</string>
+    <string name="button_add">Add</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="toast_label_cannot_be_empty">Label cannot be empty</string>
+    <string name="toast_no_keys_selected">No keys selected</string>
+    <string name="toast_custom_key_added">Custom key added</string>
+    <string name="dialog_select_keys_title">Select Keys</string>
+    <string name="text_selected_keys_format">Selected Keys: %s</string>
+    <string name="toast_key_not_translatable_format">Key not translatable: %s</string>
+    <string name="toast_invalid_key_code_tag_format">Invalid key code tag: %s</string>
+    <string name="dialog_edit_delete_custom_key_title">Edit/Delete Custom Key</string>
+    <string name="dialog_edit_delete_custom_key_message">What do you want to do with \"%s\"?</string>
+    <string name="button_edit">Edit</string>
+    <string name="button_delete">Delete</string>
+    <string name="toast_custom_key_deleted">Custom key deleted</string>
+    <string name="dialog_edit_custom_key_title">Edit Custom Key</string>
+    <string name="button_save">Save</string>
+    <string name="toast_custom_key_updated">Custom key updated</string>
 </resources>

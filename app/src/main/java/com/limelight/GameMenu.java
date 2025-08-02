@@ -83,7 +83,7 @@ public class GameMenu implements CustomSpecialKeyDataChangeListener {
         new Handler().postDelayed((() -> {
             for (int pos = keys.length - 1; pos >= 0; pos--) {
                 short key = keys[pos];
-                modifier[0] &= ~getModifier(key);
+                modifier[0] &= (byte) ~getModifier(key);
                 conn.sendKeyboardInput(key, KeyboardPacket.KEY_UP, modifier[0], (byte) 0);
             }
         }), KEY_UP_DELAY);
@@ -155,7 +155,7 @@ public class GameMenu implements CustomSpecialKeyDataChangeListener {
         }
 
         specialKeyOptions.add(new MenuOption(getString(R.string.game_menu_manage_custom_keys),
-                () -> specialKeyDialogManager.showManageCustomKeysDialog()));
+                specialKeyDialogManager::showManageCustomKeysDialog));
 
         showSidebarMenu(getString(R.string.game_menu_send_keys),
                 specialKeyOptions.toArray(new MenuOption[0]), true);
@@ -163,22 +163,22 @@ public class GameMenu implements CustomSpecialKeyDataChangeListener {
 
     private void showMenu() {
         List<MenuOption> options = new ArrayList<>();
-        options.add(new MenuOption(getString(R.string.game_menu_toggle_keyboard), true, () -> game.toggleKeyboard()));
+        options.add(new MenuOption(getString(R.string.game_menu_toggle_keyboard), true, game::toggleKeyboard));
 
         if (device != null) {
             options.addAll(device.getGameMenuOptions());
         }
 
-        options.add(new MenuOption(getString(R.string.game_menu_send_keys), () -> showSpecialKeysMenu()));
+        options.add(new MenuOption(getString(R.string.game_menu_send_keys), this::showSpecialKeysMenu));
 
         List<MenuOption> configOptions = new ArrayList<>();
-        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_performance_overlay), () -> game.togglePerformanceOverlay()));
-        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_virtual_controller), () -> game.toggleVirtualController()));
-        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_trackpad), () -> game.toggleTouchscreenTrackpad()));
+        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_performance_overlay), game::togglePerformanceOverlay));
+        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_virtual_controller), game::toggleVirtualController));
         configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_floating_button), true,
                 game::toggleFloatingButtonVisibility));
 
-        options.add(new MenuOption(getString(R.string.game_menu_config), () -> showSidebarMenu("Config", configOptions.toArray(new MenuOption[0]), true)));
+        options.add(new MenuOption(getString(R.string.game_menu_config), () -> showSidebarMenu(getString(R.string.game_menu_config), configOptions.toArray(new MenuOption[0]), true)));
+        options.add(new MenuOption(getString(R.string.game_menu_toggle_trackpad), game::changeMouseMode));
 
         showSidebarMenu(getString(R.string.game_menu_config), options.toArray(new MenuOption[0]), false);
     }

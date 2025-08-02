@@ -60,6 +60,7 @@ public class PreferenceConfiguration {
     private static final String VIBRATE_FALLBACK_STRENGTH_PREF_STRING = "seekbar_vibrate_fallback_strength";
     private static final String FLIP_FACE_BUTTONS_PREF_STRING = "checkbox_flip_face_buttons";
     private static final String TOUCHSCREEN_TRACKPAD_PREF_STRING = "checkbox_touchscreen_trackpad";
+    private static final String MOUSE_MODE_PREF_STRING = "list_mouse_mode";
     private static final String LATENCY_TOAST_PREF_STRING = "checkbox_enable_post_stream_toast";
     private static final String FRAME_PACING_PREF_STRING = "frame_pacing";
     private static final String ABSOLUTE_MOUSE_MODE_PREF_STRING = "checkbox_absolute_mouse_mode";
@@ -100,6 +101,7 @@ public class PreferenceConfiguration {
     private static final int DEFAULT_VIBRATE_FALLBACK_STRENGTH = 100;
     private static final boolean DEFAULT_FLIP_FACE_BUTTONS = false;
     private static final boolean DEFAULT_TOUCHSCREEN_TRACKPAD = false;
+    private static final String DEFAULT_TOUCH_MODE = "0";
     private static final String DEFAULT_AUDIO_CONFIG = "2"; // Stereo
     private static final boolean DEFAULT_LATENCY_TOAST = false;
     private static final String DEFAULT_FRAME_PACING = "latency";
@@ -149,9 +151,11 @@ public class PreferenceConfiguration {
     public boolean vibrateFallbackToDevice;
     public int vibrateFallbackToDeviceStrength;
     public boolean touchscreenTrackpad;
+    public int touchMode;
     public MoonBridge.AudioConfiguration audioConfiguration;
     public int framePacing;
     public boolean absoluteMouseMode;
+    public boolean multiTouchMode;
     public boolean enableAudioFx;
     public boolean reduceRefreshRate;
     public boolean fullRange;
@@ -562,6 +566,26 @@ public class PreferenceConfiguration {
             config.audioConfiguration = MoonBridge.AUDIO_CONFIGURATION_STEREO;
         }
 
+        String touchModeStr = prefs.getString(MOUSE_MODE_PREF_STRING, DEFAULT_TOUCH_MODE);
+        config.touchMode = Integer.parseInt(touchModeStr);
+        config.multiTouchMode = false;
+        config.absoluteMouseMode = false;
+        config.touchscreenTrackpad = false;
+
+        switch (config.touchMode) {
+            case 0: // Multi Touch
+                config.multiTouchMode = true;
+                break;
+            case 1: // Absolute Touch
+                config.absoluteMouseMode = true;
+                break;
+            case 2: // Trackpad
+                config.touchscreenTrackpad = true;
+                break;
+            case 3: // Disabled
+                break;
+        }
+
         config.videoFormat = getVideoFormatValue(context);
         config.framePacing = getFramePacingValue(context);
 
@@ -582,8 +606,8 @@ public class PreferenceConfiguration {
         config.multiController = prefs.getBoolean(MULTI_CONTROLLER_PREF_STRING, DEFAULT_MULTI_CONTROLLER);
         config.usbDriver = prefs.getBoolean(USB_DRIVER_PREF_SRING, DEFAULT_USB_DRIVER);
         config.onscreenController = prefs.getBoolean(ONSCREEN_CONTROLLER_PREF_STRING, ONSCREEN_CONTROLLER_DEFAULT);
-        config.enableFreeAnalogStick=prefs.getBoolean(CHECKBOX_ENABLE_FREE_ANALOG_STICK,CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT);
-        config.virtualAnalogDeadzonePercentage = prefs.getInt(ANALOG_STICK_OPACITY_PREF_STRING,DEFAULT_FREE_ANALOG_STICK_OPACITY);
+        config.enableFreeAnalogStick=prefs.getBoolean(CHECKBOX_ENABLE_FREE_ANALOG_STICK, CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT);
+        config.virtualAnalogDeadzonePercentage = prefs.getInt(ANALOG_STICK_OPACITY_PREF_STRING, DEFAULT_FREE_ANALOG_STICK_OPACITY);
         config.onlyL3R3 = prefs.getBoolean(ONLY_L3_R3_PREF_STRING, ONLY_L3_R3_DEFAULT);
         config.enableHdr = prefs.getBoolean(ENABLE_HDR_PREF_STRING, DEFAULT_ENABLE_HDR) && !isShieldAtvFirmwareWithBrokenHdr();
         config.enablePip = prefs.getBoolean(ENABLE_PIP_PREF_STRING, DEFAULT_ENABLE_PIP);

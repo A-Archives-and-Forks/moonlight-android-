@@ -139,7 +139,7 @@
     <string name="game_menu_toggle_virtual_keyboard_model">Toggle On-screen full keyboard</string>
     <string name="game_menu_toggle_performance_overlay">Toggle Performance Overlay</string>
     <string name="game_menu_toggle_virtual_controller">Toggle Controller Overlay</string>
-    <string name="game_menu_toggle_trackpad">Toggle Touchscreen as Trackpad</string>
+    <string name="game_menu_toggle_trackpad">Mouse Mode</string>
     <string name="game_menu_config">Settings</string>
     <string name="game_menu_toggle_mouse_on">Enable Controller Mouse Emulation</string>
     <string name="game_menu_toggle_mouse_off">Disable Controller Mouse Emulation</string>
@@ -223,6 +223,8 @@
     <string name="category_input_settings">Input Settings</string>
     <string name="title_checkbox_touchscreen_trackpad">Use the touchscreen as a trackpad</string>
     <string name="summary_checkbox_touchscreen_trackpad">If enabled, the touchscreen acts like a trackpad. If disabled, the touchscreen directly controls the mouse cursor.</string>
+    <string name="title_mouse_mode">Mouse mode</string>
+    <string name="summary_mouse_mode">Select between Multi Touch/Absolute Mouse/Trackpad/Disabled for Mouse Input Mode</string>
     <string name="title_checkbox_absolute_mouse_mode">Remote desktop mouse mode</string>
     <string name="summary_checkbox_absolute_mouse_mode">This can make mouse acceleration behave more naturally for remote desktop usage, but it is incompatible with many games.</string>
     <string name="title_checkbox_mouse_nav_buttons">Enable back and forward mouse buttons</string>

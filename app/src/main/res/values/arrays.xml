@@ -95,6 +95,19 @@
         <item>in</item>
     </string-array>
 
+    <string-array name="touch_mode">
+        <item>Multi Touch</item>
+        <item>Absolute Touch</item>
+        <item>Trackpad</item>
+        <item>Disabled</item>
+    </string-array>
+    <string-array name="touch_mode_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
     <string-array name="video_format_names">
         <item>@string/videoformat_auto</item>
         <item>@string/videoformat_av1always</item>

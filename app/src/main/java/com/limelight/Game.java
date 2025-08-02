@@ -8,6 +8,7 @@ import com.limelight.binding.input.GameInputDevice;
 import com.limelight.binding.input.KeyboardTranslator;
 import com.limelight.binding.input.capture.InputCaptureManager;
 import com.limelight.binding.input.capture.InputCaptureProvider;
+import com.limelight.binding.input.touch.AbsoluteTouchContext;
 import com.limelight.binding.input.touch.RelativeTouchContext;
 import com.limelight.binding.input.driver.UsbDriverService;
 import com.limelight.binding.input.evdev.EvdevListener;
@@ -39,6 +40,7 @@ import com.limelight.utils.UiHelper;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
 import android.app.Service;
 import android.content.ComponentName;
@@ -90,6 +92,7 @@ import java.lang.reflect.Method;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Locale;
 
 
@@ -512,19 +515,24 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         inputManager.registerInputDeviceListener(keyboardTranslator, null);
 
         // Initialize touch contexts
-        for (int i = 0; i < touchContextMap.length; i++) {
-            if (!prefConfig.touchscreenTrackpad) {
-//                touchContextMap[i] = new AbsoluteTouchContext(conn, i, streamView);
-                touchContextMap[i] = new RelativeTouchContext(conn, i,
-                        REFERENCE_HORIZ_RES, REFERENCE_VERT_RES,
-                        streamView, prefConfig);
-            }
-            else {
-                touchContextMap[i] = new RelativeTouchContext(conn, i,
-                        REFERENCE_HORIZ_RES, REFERENCE_VERT_RES,
-                        streamView, prefConfig);
-            }
-        }
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String modeValueStr = sharedPrefs.getString("list_mouse_mode", "0");
+        int modeValue = Integer.parseInt(modeValueStr);
+        applyMouseMode(modeValue);
+
+//        for (int i = 0; i < touchContextMap.length; i++) {
+//            if (!prefConfig.touchscreenTrackpad) {
+////                touchContextMap[i] = new AbsoluteTouchContext(conn, i, streamView);
+//                touchContextMap[i] = new RelativeTouchContext(conn, i,
+//                        REFERENCE_HORIZ_RES, REFERENCE_VERT_RES,
+//                        streamView, prefConfig);
+//            }
+//            else {
+//                touchContextMap[i] = new RelativeTouchContext(conn, i,
+//                        REFERENCE_HORIZ_RES, REFERENCE_VERT_RES,
+//                        streamView, prefConfig);
+//            }
+//        }
 
         virtualController = new VirtualController(controllerHandler,
                 (FrameLayout) streamView.getParent(),
@@ -2105,8 +2113,12 @@ public class Game extends Activity implements SurfaceHolder.Callback,
 
                     // Cancel the first and second touches to avoid
                     // erroneous events
-                    for (TouchContext aTouchContext : touchContextMap) {
-                        aTouchContext.cancelTouch();
+                    if (touchContextMap != null) {
+                        for (TouchContext aTouchContext : touchContextMap) {
+                            if (aTouchContext != null) {
+                                aTouchContext.cancelTouch();
+                            }
+                        }
                     }
 
                     return true;
@@ -2115,7 +2127,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 // TODO: Re-enable native touch when have a better solution for handling
                 // cancelled touches from Android gestures and 3 finger taps to activate
                 // the software keyboard.
-                if (!prefConfig.touchscreenTrackpad && trySendTouchEvent(view, event)) {
+                if (prefConfig.multiTouchMode && trySendTouchEvent(view, event)) {
                     // If this host supports touch events and absolute touch is enabled,
                     // send it directly as a touch event.
                     return true;
@@ -2872,13 +2884,68 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         }
     }
 
-    public void toggleTouchscreenTrackpad() {
-        String PREF_KEY_TRACKPAD = "checkbox_touchscreen_trackpad";
+    public void changeMouseMode() {
+        final String PREF_KEY_MOUSE_MODE = "list_mouse_mode";
 
-        prefConfig.touchscreenTrackpad = !prefConfig.touchscreenTrackpad;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String currentValueStr = prefs.getString(PREF_KEY_MOUSE_MODE, "0");
+        int currentValue = Integer.parseInt(currentValueStr);
+
+        String[] modeLabels = getResources().getStringArray(R.array.touch_mode);
+        String[] modeValues = getResources().getStringArray(R.array.touch_mode_values);
+
+        int selectedIndex = Arrays.asList(modeValues).indexOf(String.valueOf(currentValue));
+        if (selectedIndex < 0) selectedIndex = 0;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Select Touch Input Mode")
+                .setSingleChoiceItems(modeLabels, selectedIndex, (dialog, which) -> {
+                    applyMouseMode(Integer.parseInt(modeValues[which]));
+                    dialog.dismiss();
+                })
+                .show();
+    }
+
+    private void applyMouseMode(int modeValue) {
+        final String PREF_KEY_MOUSE_MODE = "list_mouse_mode";
 
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-        editor.putBoolean(PREF_KEY_TRACKPAD, prefConfig.touchscreenTrackpad);
+
+        // re-initialize touch context
+        for (int i = 0; i < touchContextMap.length; i++) {
+            if (touchContextMap[i] != null) {
+                touchContextMap[i].cancelTouch();
+            }
+            touchContextMap[i] = null;
+        }
+
+        // default config
+        prefConfig.touchscreenTrackpad = false;
+        prefConfig.multiTouchMode = false;
+        prefConfig.absoluteMouseMode = false;
+
+        // set configuration based on mode
+        switch (modeValue) {
+            case 0: // Multi Touch
+                prefConfig.multiTouchMode = true;
+                break;
+            case 1: // Absolute Touch
+                prefConfig.absoluteMouseMode = true;
+                for (int i = 0; i < touchContextMap.length; i++) {
+                    touchContextMap[i] = new AbsoluteTouchContext(conn, i, streamView);
+                }
+                break;
+            case 2: // Trackpad
+                prefConfig.touchscreenTrackpad = true;
+                for (int i = 0; i < touchContextMap.length; i++) {
+                    touchContextMap[i] = new RelativeTouchContext(conn, i, REFERENCE_HORIZ_RES, REFERENCE_VERT_RES, streamView, prefConfig);
+                }
+                break;
+            case 3: // Disabled
+                break;
+        }
+
+        editor.putString(PREF_KEY_MOUSE_MODE, String.valueOf(modeValue));
         editor.apply();
     }
 

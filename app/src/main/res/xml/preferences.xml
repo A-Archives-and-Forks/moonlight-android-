@@ -133,11 +133,18 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/category_input_settings"
         android:key="category_input_settings">
-        <CheckBoxPreference
-            android:key="checkbox_touchscreen_trackpad"
-            android:title="@string/title_checkbox_touchscreen_trackpad"
-            android:summary="@string/summary_checkbox_touchscreen_trackpad"
-            android:defaultValue="true" />
+<!--        <CheckBoxPreference-->
+<!--            android:key="checkbox_touchscreen_trackpad"-->
+<!--            android:title="@string/title_checkbox_touchscreen_trackpad"-->
+<!--            android:summary="@string/summary_checkbox_touchscreen_trackpad"-->
+<!--            android:defaultValue="true" />-->
+        <ListPreference
+            android:key="list_mouse_mode"
+            android:title="@string/title_mouse_mode"
+            android:summary="@string/summary_mouse_mode"
+            android:entries="@array/touch_mode"
+            android:entryValues="@array/touch_mode_values"
+            android:defaultValue="0" />
         <CheckBoxPreference
             android:key="checkbox_mouse_nav_buttons"
             android:title="@string/title_checkbox_mouse_nav_buttons"

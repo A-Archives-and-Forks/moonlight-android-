@@ -57,6 +57,7 @@
         android:background="#80000000"
         android:visibility="gone"/>
 
+    <!-- Game Menu -->
     <LinearLayout
         android:id="@+id/game_menu_sidebar"
         android:layout_width="250dp"
@@ -68,7 +69,6 @@
         android:visibility="gone"
         tools:visibility="visible">
 
-        <!-- Title at the Top -->
         <TextView
             android:id="@+id/menu_title"
             android:layout_width="match_parent"
@@ -81,7 +81,6 @@
             android:paddingTop="12dp"
             android:paddingBottom="12dp" />
 
-        <!-- Divider between Title and ListView -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -89,9 +88,6 @@
             android:layout_marginBottom="8dp"
             android:background="@android:color/darker_gray" />
 
-        <!-- ListView in the middle -->
-
-        <!-- Divider between ListView and Disconnect -->
         <ListView
             android:id="@+id/menu_list"
             android:layout_width="match_parent"
@@ -106,7 +102,6 @@
             android:background="@android:color/darker_gray"
             android:layout_marginTop="8dp"/>
 
-        <!-- Disconnect button at the bottom -->
         <TextView
             android:id="@+id/disconnect_text"
             android:layout_width="match_parent"
@@ -122,7 +117,7 @@
             android:background="?android:attr/selectableItemBackground" />
     </LinearLayout>
 
-    <!-- Floating Menu Button -->
+    <!-- Floating Keyboard Button -->
     <ImageButton
         android:id="@+id/floatingMenuButton"
         android:layout_width="40dp"

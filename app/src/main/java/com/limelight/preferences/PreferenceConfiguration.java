@@ -45,7 +45,7 @@ public class PreferenceConfiguration {
     private static final String ONSCREEN_CONTROLLER_PREF_STRING = "checkbox_show_onscreen_controls";
     private static final String ANALOG_STICK_OPACITY_PREF_STRING = "seekbar_osc_analog_stick_deadzone";
     private static final String CHECKBOX_ENABLE_FREE_ANALOG_STICK = "checkbox_enable_free_analog_stick";
-    private static final String ONLY_L3_R3_PREF_STRING = "checkbox_only_show_L3R3";
+    private static final String SEPARATE_L3_R3_PREF_STRING = "checkbox_only_show_L3R3";
     private static final String LEGACY_DISABLE_FRAME_DROP_PREF_STRING = "checkbox_disable_frame_drop";
     private static final String ENABLE_HDR_PREF_STRING = "checkbox_enable_hdr";
     private static final String ENABLE_PIP_PREF_STRING = "checkbox_enable_pip";
@@ -53,6 +53,7 @@ public class PreferenceConfiguration {
     private static final String BIND_ALL_USB_STRING = "checkbox_usb_bind_all";
     private static final String MOUSE_EMULATION_STRING = "checkbox_mouse_emulation";
     private static final String ANALOG_SCROLLING_PREF_STRING = "analog_scrolling";
+    private static final String DOUBLE_TAP_TO_RIGHT_CLICK_STRING = "checkbox_double_tap_to_right_click";
     private static final String MOUSE_NAV_BUTTONS_STRING = "checkbox_mouse_nav_buttons";
     static final String UNLOCK_FPS_STRING = "checkbox_unlock_fps";
     private static final String VIBRATE_OSC_PREF_STRING = "checkbox_vibrate_osc";
@@ -87,13 +88,14 @@ public class PreferenceConfiguration {
     private static final boolean ONSCREEN_CONTROLLER_DEFAULT = false;
     private static final boolean CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT = false;
     private static final int DEFAULT_FREE_ANALOG_STICK_OPACITY = 20;
-    private static final boolean ONLY_L3_R3_DEFAULT = false;
+    private static final boolean SEPARATE_L3_R3_DEFAULT = false;
     private static final boolean DEFAULT_ENABLE_HDR = false;
     private static final boolean DEFAULT_ENABLE_PIP = false;
     private static final boolean DEFAULT_ENABLE_PERF_OVERLAY = false;
     private static final boolean DEFAULT_BIND_ALL_USB = false;
     private static final boolean DEFAULT_MOUSE_EMULATION = true;
     private static final String DEFAULT_ANALOG_STICK_FOR_SCROLLING = "right";
+    private static final boolean DEFAULT_DOUBLE_TAP_TO_RIGHT_CLICK = false;
     private static final boolean DEFAULT_MOUSE_NAV_BUTTONS = false;
     private static final boolean DEFAULT_UNLOCK_FPS = false;
     private static final boolean DEFAULT_VIBRATE_OSC = true;
@@ -137,7 +139,7 @@ public class PreferenceConfiguration {
     public boolean onscreenController;
     public boolean enableFreeAnalogStick;
     public int virtualAnalogDeadzonePercentage;
-    public boolean onlyL3R3;
+    public boolean separateL3R3;
     public boolean enableHdr;
     public boolean enablePip;
     public boolean enablePerfOverlay;
@@ -145,6 +147,7 @@ public class PreferenceConfiguration {
     public boolean bindAllUsb;
     public boolean mouseEmulation;
     public AnalogStickForScrolling analogStickForScrolling;
+    public boolean doubleTapToRightClick;
     public boolean mouseNavButtons;
     public boolean unlockFps;
     public boolean vibrateOsc;
@@ -608,12 +611,13 @@ public class PreferenceConfiguration {
         config.onscreenController = prefs.getBoolean(ONSCREEN_CONTROLLER_PREF_STRING, ONSCREEN_CONTROLLER_DEFAULT);
         config.enableFreeAnalogStick=prefs.getBoolean(CHECKBOX_ENABLE_FREE_ANALOG_STICK, CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT);
         config.virtualAnalogDeadzonePercentage = prefs.getInt(ANALOG_STICK_OPACITY_PREF_STRING, DEFAULT_FREE_ANALOG_STICK_OPACITY);
-        config.onlyL3R3 = prefs.getBoolean(ONLY_L3_R3_PREF_STRING, ONLY_L3_R3_DEFAULT);
+        config.separateL3R3 = prefs.getBoolean(SEPARATE_L3_R3_PREF_STRING, SEPARATE_L3_R3_DEFAULT);
         config.enableHdr = prefs.getBoolean(ENABLE_HDR_PREF_STRING, DEFAULT_ENABLE_HDR) && !isShieldAtvFirmwareWithBrokenHdr();
         config.enablePip = prefs.getBoolean(ENABLE_PIP_PREF_STRING, DEFAULT_ENABLE_PIP);
         config.enablePerfOverlay = prefs.getBoolean(ENABLE_PERF_OVERLAY_STRING, DEFAULT_ENABLE_PERF_OVERLAY);
         config.bindAllUsb = prefs.getBoolean(BIND_ALL_USB_STRING, DEFAULT_BIND_ALL_USB);
         config.mouseEmulation = prefs.getBoolean(MOUSE_EMULATION_STRING, DEFAULT_MOUSE_EMULATION);
+        config.doubleTapToRightClick = prefs.getBoolean(DOUBLE_TAP_TO_RIGHT_CLICK_STRING, DEFAULT_DOUBLE_TAP_TO_RIGHT_CLICK);
         config.mouseNavButtons = prefs.getBoolean(MOUSE_NAV_BUTTONS_STRING, DEFAULT_MOUSE_NAV_BUTTONS);
         config.unlockFps = prefs.getBoolean(UNLOCK_FPS_STRING, DEFAULT_UNLOCK_FPS);
         config.vibrateOsc = prefs.getBoolean(VIBRATE_OSC_PREF_STRING, DEFAULT_VIBRATE_OSC);

@@ -223,12 +223,14 @@
     <string name="category_input_settings">Input Settings</string>
     <string name="title_checkbox_touchscreen_trackpad">Use the touchscreen as a trackpad</string>
     <string name="summary_checkbox_touchscreen_trackpad">If enabled, the touchscreen acts like a trackpad. If disabled, the touchscreen directly controls the mouse cursor.</string>
-    <string name="title_mouse_mode">Mouse mode</string>
-    <string name="summary_mouse_mode">Select between Multi Touch/Absolute Mouse/Trackpad/Disabled for Mouse Input Mode</string>
+    <string name="title_mouse_mode">Touch Input mode</string>
+    <string name="summary_mouse_mode">Select between Multi Touch/Absolute Mouse/Trackpad/Disabled for Touch Input mode</string>
     <string name="title_checkbox_absolute_mouse_mode">Remote desktop mouse mode</string>
     <string name="summary_checkbox_absolute_mouse_mode">This can make mouse acceleration behave more naturally for remote desktop usage, but it is incompatible with many games.</string>
     <string name="title_checkbox_mouse_nav_buttons">Enable back and forward mouse buttons</string>
     <string name="summary_checkbox_mouse_nav_buttons">Enabling this option may break right clicking on some buggy devices</string>
+    <string name="title_double_tap_to_right_click">Enable double tap to right click (Absolute Mouse)</string>
+    <string name="summary_double_tap_to_right_click">Use double tap to right click instead of hold to right click (Absolute Mouse mode only)</string>
 
     <string name="category_on_screen_controls_settings">On-screen Controls Settings</string>
     <string name="title_checkbox_show_onscreen_controls">Show on-screen controls</string>
@@ -239,8 +241,8 @@
     <string name="summary_osc_analog_stick_deadzone">Adjust virtual analog stick deadzone. \nNote: Setting the deadzone below 20% might cause jitterring issue.</string>
     <string name="title_checkbox_vibrate_osc">Enable vibration</string>
     <string name="summary_checkbox_vibrate_osc">Vibrates your device to emulate rumble for the on-screen controls</string>
-    <string name="title_only_l3r3">Only show L3 and R3</string>
-    <string name="summary_only_l3r3">Hide all virtual buttons except L3 and R3</string>
+    <string name="title_only_l3r3">Separate L3 and R3</string>
+    <string name="summary_only_l3r3">Separate L3 and R3 buttons from the on-screen controls</string>
     <string name="title_reset_osc">Clear saved on-screen controls layout</string>
     <string name="summary_reset_osc">Resets all on-screen controls to their default size and position</string>
     <string name="dialog_title_reset_osc">Reset Layout</string>

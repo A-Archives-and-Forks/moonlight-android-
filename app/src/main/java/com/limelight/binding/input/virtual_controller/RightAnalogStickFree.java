@@ -9,12 +9,13 @@ import static com.limelight.binding.input.virtual_controller.VirtualControllerEl
 import android.content.Context;
 
 import com.limelight.nvstream.input.ControllerPacket;
+import com.limelight.preferences.PreferenceConfiguration;
 
 public class RightAnalogStickFree extends AnalogStickFree {
     public RightAnalogStickFree(final VirtualController controller, final Context context) {
         super(controller, context, EID_RS);
 
-        strStickSide = "R";
+        PreferenceConfiguration config = PreferenceConfiguration.readPreferences(context);
 
         addAnalogStickListener(new AnalogStickListener() {
             @Override
@@ -33,11 +34,13 @@ public class RightAnalogStickFree extends AnalogStickFree {
 
             @Override
             public void onDoubleClick() {
-                VirtualController.ControllerInputContext inputContext =
-                        controller.getControllerInputContext();
-                inputContext.inputMap |= ControllerPacket.RS_CLK_FLAG;
+                if (!config.separateL3R3) {
+                    VirtualController.ControllerInputContext inputContext =
+                            controller.getControllerInputContext();
+                    inputContext.inputMap |= ControllerPacket.RS_CLK_FLAG;
 
-                controller.sendControllerInputContext();
+                    controller.sendControllerInputContext();
+                }
             }
 
             @Override

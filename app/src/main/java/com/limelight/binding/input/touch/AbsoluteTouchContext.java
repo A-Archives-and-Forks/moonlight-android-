@@ -6,6 +6,7 @@ import android.view.View;
 
 import com.limelight.nvstream.NvConnection;
 import com.limelight.nvstream.input.MouseButtonPacket;
+import com.limelight.preferences.PreferenceConfiguration;
 
 public class AbsoluteTouchContext implements TouchContext {
     private int lastTouchDownX = 0;
@@ -17,24 +18,24 @@ public class AbsoluteTouchContext implements TouchContext {
     private int lastTouchLocationX = 0;
     private int lastTouchLocationY = 0;
     private boolean cancelled;
-//    private boolean confirmedLongPress;
+    private boolean confirmedLongPress;
     private boolean confirmedTap;
     private boolean confirmedTwoFingerRightClick;
 
-//    private final Runnable longPressRunnable = new Runnable() {
-//        @Override
-//        public void run() {
-//            // This timer should have already expired, but cancel it just in case
-//            cancelTapDownTimer();
-//
-//            // Switch from a left click to a right click after a long press
-//            confirmedLongPress = true;
-//            if (confirmedTap) {
-//                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
-//            }
-//            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
-//        }
-//    };
+    private final Runnable longPressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // This timer should have already expired, but cancel it just in case
+            cancelTapDownTimer();
+
+            // Switch from a left click to a right click after a long press
+            confirmedLongPress = true;
+            if (confirmedTap) {
+                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
+            }
+            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
+        }
+    };
 
     private final Runnable tapDownRunnable = new Runnable() {
         @Override
@@ -97,7 +98,9 @@ public class AbsoluteTouchContext implements TouchContext {
         if (actionIndex == 0) {
             // Start the timers
             startTapDownTimer();
-//            startLongPressTimer();
+            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick) {
+                startLongPressTimer();
+            }
         }
 
         return true;
@@ -127,13 +130,15 @@ public class AbsoluteTouchContext implements TouchContext {
 
         if (actionIndex == 0) {
             // Cancel the timers
-//            cancelLongPressTimer();
             cancelTapDownTimer();
+            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick) {
+                cancelLongPressTimer();
+            }
 
             // Raise the mouse buttons that we currently have down
-//            if (confirmedLongPress) {
-//                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
-//            }
+            if (confirmedLongPress) {
+                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
+            }
             if (confirmedTap) {
                 conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
             }
@@ -155,14 +160,14 @@ public class AbsoluteTouchContext implements TouchContext {
         lastTouchUpTime = eventTime;
     }
 
-//    private void startLongPressTimer() {
-//        cancelLongPressTimer();
-//        handler.postDelayed(longPressRunnable, LONG_PRESS_TIME_THRESHOLD);
-//    }
-//
-//    private void cancelLongPressTimer() {
-//        handler.removeCallbacks(longPressRunnable);
-//    }
+    private void startLongPressTimer() {
+        cancelLongPressTimer();
+        handler.postDelayed(longPressRunnable, LONG_PRESS_TIME_THRESHOLD);
+    }
+
+    private void cancelLongPressTimer() {
+        handler.removeCallbacks(longPressRunnable);
+    }
 
     private void startTapDownTimer() {
         cancelTapDownTimer();
@@ -197,19 +202,12 @@ public class AbsoluteTouchContext implements TouchContext {
             return true;
         }
 
-//        if (actionIndex == 0) {
-//            if (distanceExceeds(eventX - lastTouchDownX, eventY - lastTouchDownY, LONG_PRESS_DISTANCE_THRESHOLD)) {
-//                // Moved too far since touch down. Cancel the long press timer.
-//                cancelLongPressTimer();
-//            }
-//
-//            // Ignore motion within the deadzone period after touch down
-//            if (confirmedTap || distanceExceeds(eventX - lastTouchDownX, eventY - lastTouchDownY, TOUCH_DOWN_DEAD_ZONE_DISTANCE_THRESHOLD)) {
-//                tapConfirmed();
-//                updatePosition(eventX, eventY);
-//            }
-//        }
         if (actionIndex == 0) {
+            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick &&
+                    distanceExceeds(eventX - lastTouchDownX, eventY - lastTouchDownY, LONG_PRESS_DISTANCE_THRESHOLD)) {
+                cancelLongPressTimer();
+            }
+
             // Ignore motion within the deadzone period after touch down
             if (confirmedTap || distanceExceeds(eventX - lastTouchDownX, eventY - lastTouchDownY, TOUCH_DOWN_DEAD_ZONE_DISTANCE_THRESHOLD)) {
                 tapConfirmed();
@@ -231,7 +229,9 @@ public class AbsoluteTouchContext implements TouchContext {
         cancelled = true;
 
         // Cancel the timers
-//        cancelLongPressTimer();
+        if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick) {
+            cancelLongPressTimer();
+        }
         cancelTapDownTimer();
 
         // Raise the mouse buttons
@@ -253,22 +253,28 @@ public class AbsoluteTouchContext implements TouchContext {
         // This is where we handle the two-finger right click.
         // It should only be handled by the main touch context (actionIndex == 0).
         if (actionIndex == 0) {
-            if (pointerCount == 2) {
-                // If we detect two fingers, we send a right-click down event
-                // and cancel any pending single-tap events.
-                if (!confirmedTwoFingerRightClick) {
-                    confirmedTwoFingerRightClick = true;
-                    conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
-                    cancelTapDownTimer();
+            if (PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick) {
+                if (pointerCount == 2) {
+                    // If we detect two fingers, we send a right-click down event
+                    // and cancel any pending single-tap events.
+                    if (!confirmedTwoFingerRightClick) {
+                        confirmedTwoFingerRightClick = true;
+                        conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
+                        cancelTapDownTimer();
+                    }
+                } else if (pointerCount < 2 && confirmedTwoFingerRightClick) {
+                    // If the pointer count drops below 2 after a two-finger gesture,
+                    // we send a right-click up event and reset the flag.
+                    conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
+                    confirmedTwoFingerRightClick = false;
+                } else if (pointerCount > 1) {
+                    // For any other multi-finger gesture (more than 2), we cancel the touch
+                    cancelTouch();
                 }
-            } else if (pointerCount < 2 && confirmedTwoFingerRightClick) {
-                // If the pointer count drops below 2 after a two-finger gesture,
-                // we send a right-click up event and reset the flag.
-                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
-                confirmedTwoFingerRightClick = false;
-            } else if (pointerCount > 1) {
-                // For any other multi-finger gesture (more than 2), we cancel the touch
-                cancelTouch();
+            } else {
+                if (pointerCount > 1) {
+                    cancelTouch();
+                }
             }
         }
     }

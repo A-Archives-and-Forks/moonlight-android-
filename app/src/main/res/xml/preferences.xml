@@ -293,6 +293,16 @@
             android:summary="@string/summary_enable_post_stream_toast"
             android:defaultValue="false"/>
     </PreferenceCategory>
+    <PreferenceCategory android:title="MISC" android:key="misc">
+        <Preference
+            android:key="export_osc"
+            android:title="@string/export_osc_settings"
+            android:summary="@string/save_current_on_screen_control_settings_to_file" />
+        <Preference
+            android:key="import_osc"
+            android:title="@string/import_osc_settings"
+            android:summary="@string/restore_on_screen_control_settings_from_file" />
+    </PreferenceCategory>>
     <!--PreferenceCategory android:title="@string/category_help"
         android:key="category_help">
         <com.limelight.preferences.WebLauncherPreference

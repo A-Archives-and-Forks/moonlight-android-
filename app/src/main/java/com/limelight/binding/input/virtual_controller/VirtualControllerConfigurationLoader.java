@@ -342,7 +342,7 @@ public class VirtualControllerConfigurationLoader {
         if (config.separateL3R3) {
             controller.addElement(createDigitalButton(
                     VirtualControllerElement.EID_LSB,
-                            ControllerPacket.LS_CLK_FLAG, 0, 1, "L3", -1, controller, context),
+                    ControllerPacket.LS_CLK_FLAG, 0, 1, "L3", -1, controller, context),
                     screenScale(TRIGGER_L_BASE_X, height),
                     screenScale(L3_R3_BASE_Y, height),
                     screenScale(TRIGGER_WIDTH, height),
@@ -351,7 +351,7 @@ public class VirtualControllerConfigurationLoader {
 
             controller.addElement(createDigitalButton(
                     VirtualControllerElement.EID_RSB,
-                            ControllerPacket.RS_CLK_FLAG, 0, 1, "R3", -1, controller, context),
+                    ControllerPacket.RS_CLK_FLAG, 0, 1, "R3", -1, controller, context),
                     screenScale(TRIGGER_R_BASE_X + TRIGGER_DISTANCE, height) + rightDisplacement,
                     screenScale(L3_R3_BASE_Y, height),
                     screenScale(TRIGGER_WIDTH, height),
@@ -362,8 +362,7 @@ public class VirtualControllerConfigurationLoader {
         controller.setOpacity(config.oscOpacity);
     }
 
-    public static void saveProfile(final VirtualController controller,
-                                   final Context context) {
+    public static void saveProfile(final VirtualController controller, final Context context) {
         SharedPreferences.Editor prefEditor = context.getSharedPreferences(OSC_PREFERENCE, Activity.MODE_PRIVATE).edit();
 
         for (VirtualControllerElement element : controller.getElements()) {

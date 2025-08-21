@@ -366,4 +366,8 @@
     <string name="dialog_edit_custom_key_title">Edit Custom Key</string>
     <string name="button_save">Save</string>
     <string name="toast_custom_key_updated">Custom key updated</string>
+    <string name="export_osc_settings">Export OSC Settings</string>
+    <string name="save_current_on_screen_control_settings_to_file">Save current On-Screen Control settings to file</string>
+    <string name="import_osc_settings">Import OSC Settings</string>
+    <string name="restore_on_screen_control_settings_from_file">Restore On-Screen Control settings from file</string>
 </resources>

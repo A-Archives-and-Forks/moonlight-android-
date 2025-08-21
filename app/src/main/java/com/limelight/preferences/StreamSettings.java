@@ -1,14 +1,15 @@
 package com.limelight.preferences;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.MediaCodecInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.app.Activity;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.CheckBoxPreference;
@@ -20,12 +21,14 @@ import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.util.DisplayMetrics;
 import android.util.Range;
+import android.util.Xml;
 import android.view.Display;
 import android.view.DisplayCutout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
+import android.widget.Toast;
 
 import com.limelight.LimeLog;
 import com.limelight.PcView;
@@ -35,17 +38,26 @@ import com.limelight.utils.AspectRatioConverter;
 import com.limelight.utils.Dialog;
 import com.limelight.utils.UiHelper;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlSerializer;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class StreamSettings extends Activity {
     private PreferenceConfiguration previousPrefs;
     private int previousDisplayPixelCount;
+
+    private static final int REQUEST_CODE_EXPORT_OSC = 1001;
+    private static final int REQUEST_CODE_IMPORT_OSC = 1002;
 
     // HACK for Android 9
     static DisplayCutout displayCutoutP;
@@ -728,6 +740,108 @@ public class StreamSettings extends Activity {
             });
 
             addCustomResolutionsEntries();
+
+            findPreference("export_osc").setOnPreferenceClickListener(preference -> {
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("text/xml");
+                intent.putExtra(Intent.EXTRA_TITLE, "OSC.xml");
+                startActivityForResult(intent, REQUEST_CODE_EXPORT_OSC);
+                return true;
+            });
+
+            findPreference("import_osc").setOnPreferenceClickListener(preference -> {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("text/xml");
+                startActivityForResult(intent, REQUEST_CODE_IMPORT_OSC);
+                return true;
+            });
+        }
+
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+            if (resultCode != Activity.RESULT_OK || data == null) {
+                return;
+            }
+
+            Uri uri = data.getData();
+            if (uri == null) return;
+
+            if (requestCode == REQUEST_CODE_EXPORT_OSC) {
+                exportOscPreferences(uri);
+            } else if (requestCode == REQUEST_CODE_IMPORT_OSC) {
+                importOscPreferences(uri);
+            }
+        }
+
+        private void exportOscPreferences(Uri uri) {
+            Context ctx = getActivity();
+            SharedPreferences oscPrefs = ctx.getSharedPreferences("OSC", Context.MODE_PRIVATE);
+
+            try (OutputStream os = ctx.getContentResolver().openOutputStream(uri)) {
+                XmlSerializer serializer = Xml.newSerializer();
+                serializer.setOutput(os, "UTF-8");
+                serializer.startDocument("UTF-8", true);
+                serializer.startTag(null, "map");
+
+                Map<String, ?> allPrefs = oscPrefs.getAll();
+                for (Map.Entry<String, ?> entry : allPrefs.entrySet()) {
+                    serializer.startTag(null, "string");
+                    serializer.attribute(null, "name", entry.getKey());
+                    serializer.text(String.valueOf(entry.getValue()));
+                    serializer.endTag(null, "string");
+                }
+
+                serializer.endTag(null, "map");
+                serializer.endDocument();
+                serializer.flush();
+
+                Toast.makeText(ctx, "OSC exported", Toast.LENGTH_LONG).show();
+            }
+            catch (Exception e) {
+                Toast.makeText(ctx, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }
+
+        private void importOscPreferences(Uri uri) {
+            Context ctx = getActivity();
+            File inFile = new File(ctx.getExternalFilesDir(null), "OSC.xml");
+
+            if (!inFile.exists()) {
+                Toast.makeText(ctx, "OSC.xml not found", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            try {
+                FileInputStream fis = new FileInputStream(inFile);
+
+                XmlPullParser parser = Xml.newPullParser();
+                parser.setInput(fis, "UTF-8");
+
+                SharedPreferences oscPrefs = ctx.getSharedPreferences("OSC", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = oscPrefs.edit();
+                editor.clear(); // optional: wipe existing before importing
+
+                int eventType = parser.getEventType();
+                while (eventType != XmlPullParser.END_DOCUMENT) {
+                    if (eventType == XmlPullParser.START_TAG && "string".equals(parser.getName())) {
+                        String key = parser.getAttributeValue(null, "name");
+                        String value = parser.nextText();
+                        editor.putString(key, value);
+                    }
+                    eventType = parser.next();
+                }
+
+                editor.apply();
+                fis.close();
+
+                Toast.makeText(ctx, "OSC imported from " + inFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+            }
+            catch (Exception e) {
+                Toast.makeText(ctx, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
         }
     }
 }

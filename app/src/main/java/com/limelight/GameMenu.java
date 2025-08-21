@@ -176,6 +176,11 @@ public class GameMenu implements CustomSpecialKeyDataChangeListener {
         configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_virtual_controller), game::toggleVirtualController));
         configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_floating_button), true,
                 game::toggleFloatingButtonVisibility));
+        configOptions.add(new MenuOption("Configure Virtual Controller", () -> {
+            if (game.virtualController != null) {
+                game.virtualController.toggleConfigurationMode(game);
+            }
+        }));
 
         options.add(new MenuOption(getString(R.string.game_menu_config), () -> showSidebarMenu(getString(R.string.game_menu_config), configOptions.toArray(new MenuOption[0]), true)));
         options.add(new MenuOption(getString(R.string.game_menu_toggle_trackpad), game::changeMouseMode));

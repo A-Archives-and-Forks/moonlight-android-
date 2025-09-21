@@ -194,7 +194,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     public static final String EXTRA_APP_HDR = "HDR";
     public static final String EXTRA_SERVER_CERT = "ServerCert";
 
-    private ImageButton floatingMenuButton;
+    private ImageButton floatingButton;
     private float floatingButtonDX, floatingButtonDY;
     private boolean isButtonMoving = false;
     private static final float CLICK_ACTION_THRESHOLD = 5;
@@ -570,15 +570,20 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         // The connection will be started when the surface gets created
         streamView.getHolder().addCallback(this);
 
-        floatingMenuButton = findViewById(R.id.floatingMenuButton);
+        floatingButton = findViewById(R.id.floatingButton);
+        if (prefConfig.onscreenFloatingButton) {
+            floatingButton.setVisibility(View.VISIBLE);
+        } else {
+            floatingButton.setVisibility(View.GONE);
+        }
         initFloatingButton();
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private void initFloatingButton() {
         // Touch listener for drag and click
-        if (floatingMenuButton != null) {
-            floatingMenuButton.setOnTouchListener((view, event) -> {
+        if (floatingButton != null) {
+            floatingButton.setOnTouchListener((view, event) -> {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         floatingButtonStartX = event.getRawX();
@@ -684,10 +689,10 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             if (isInPictureInPictureMode()) {
                 isHidingOverlays = true;
 
-                floatingButtonShown = floatingMenuButton.isShown();
+                floatingButtonShown = floatingButton.isShown();
 
                 if (floatingButtonShown) {
-                    floatingMenuButton.setVisibility(View.GONE);
+                    floatingButton.setVisibility(View.GONE);
                 }
 
                 if (virtualController != null && prefConfig.onscreenController) {
@@ -708,7 +713,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 isHidingOverlays = false;
 
                 if (floatingButtonShown) {
-                    floatingMenuButton.setVisibility(View.VISIBLE);
+                    floatingButton.setVisibility(View.VISIBLE);
                 }
 
                 // Restore overlays to previous state when leaving PiP
@@ -2949,13 +2954,16 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         editor.apply();
     }
 
-    private void updateFloatingButtonVisibility(boolean show) {
-        floatingMenuButton.setVisibility(show ? View.VISIBLE : View.GONE);
-    }
-
     public void toggleFloatingButtonVisibility() {
-        if (floatingMenuButton != null) {
-            updateFloatingButtonVisibility(floatingMenuButton.getVisibility() == View.GONE);
+        String PREF_KEY_OSC = "checkbox_show_floating_button_controls";
+        prefConfig.onscreenFloatingButton = !prefConfig.onscreenFloatingButton;
+
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putBoolean(PREF_KEY_OSC, prefConfig.onscreenFloatingButton);
+        editor.apply();
+
+        if (floatingButton != null) {
+            floatingButton.setVisibility(prefConfig.onscreenFloatingButton ? View.VISIBLE : View.GONE);
         }
     }
 }

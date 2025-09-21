@@ -119,7 +119,7 @@
 
     <!-- Floating Keyboard Button -->
     <ImageButton
-        android:id="@+id/floatingMenuButton"
+        android:id="@+id/floatingButton"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"

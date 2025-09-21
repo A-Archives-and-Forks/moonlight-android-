@@ -43,6 +43,7 @@ public class PreferenceConfiguration {
     private static final String USB_DRIVER_PREF_SRING = "checkbox_usb_driver";
     private static final String VIDEO_FORMAT_PREF_STRING = "video_format";
     private static final String ONSCREEN_CONTROLLER_PREF_STRING = "checkbox_show_onscreen_controls";
+    private static final String FLOATING_BUTTON_PREF_STRING = "checkbox_show_floating_button_controls";
     private static final String ANALOG_STICK_OPACITY_PREF_STRING = "seekbar_osc_analog_stick_deadzone";
     private static final String CHECKBOX_ENABLE_FREE_ANALOG_STICK = "checkbox_enable_free_analog_stick";
     private static final String SEPARATE_L3_R3_PREF_STRING = "checkbox_only_show_L3R3";
@@ -86,6 +87,7 @@ public class PreferenceConfiguration {
     private static final String DEFAULT_VIDEO_FORMAT = "auto";
 
     private static final boolean ONSCREEN_CONTROLLER_DEFAULT = false;
+    private static final boolean FLOATING_BUTTON_DEFAULT = false;
     private static final boolean CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT = false;
     private static final int DEFAULT_FREE_ANALOG_STICK_OPACITY = 20;
     private static final boolean SEPARATE_L3_R3_DEFAULT = false;
@@ -137,6 +139,7 @@ public class PreferenceConfiguration {
     public String language;
     public boolean smallIconMode, multiController, usbDriver, flipFaceButtons;
     public boolean onscreenController;
+    public boolean onscreenFloatingButton;
     public boolean enableFreeAnalogStick;
     public int virtualAnalogDeadzonePercentage;
     public boolean separateL3R3;
@@ -609,6 +612,7 @@ public class PreferenceConfiguration {
         config.multiController = prefs.getBoolean(MULTI_CONTROLLER_PREF_STRING, DEFAULT_MULTI_CONTROLLER);
         config.usbDriver = prefs.getBoolean(USB_DRIVER_PREF_SRING, DEFAULT_USB_DRIVER);
         config.onscreenController = prefs.getBoolean(ONSCREEN_CONTROLLER_PREF_STRING, ONSCREEN_CONTROLLER_DEFAULT);
+        config.onscreenFloatingButton = prefs.getBoolean(FLOATING_BUTTON_PREF_STRING, FLOATING_BUTTON_DEFAULT);
         config.enableFreeAnalogStick=prefs.getBoolean(CHECKBOX_ENABLE_FREE_ANALOG_STICK, CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT);
         config.virtualAnalogDeadzonePercentage = prefs.getInt(ANALOG_STICK_OPACITY_PREF_STRING, DEFAULT_FREE_ANALOG_STICK_OPACITY);
         config.separateL3R3 = prefs.getBoolean(SEPARATE_L3_R3_PREF_STRING, SEPARATE_L3_R3_DEFAULT);

@@ -9,7 +9,11 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.limelight.binding.PlatformBinding;
@@ -27,19 +31,27 @@ import android.app.Activity;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class AddComputerManually extends Activity {
     private TextView hostText;
+    private ArrayAdapter<String> historyAdapter;
+    private List<String> historyList;
+
     private ComputerManagerService.ComputerManagerBinder managerBinder;
     private final LinkedBlockingQueue<String> computersToAdd = new LinkedBlockingQueue<>();
     private Thread addThread;
@@ -198,6 +210,7 @@ public class AddComputerManually extends Activity {
                 @Override
                 public void run() {
                 Toast.makeText(AddComputerManually.this, getResources().getString(R.string.addpc_success), Toast.LENGTH_LONG).show();
+                    saveHistory(rawUserInput);
 
                 if (!isFinishing()) {
                     // Close the activity
@@ -303,6 +316,45 @@ public class AddComputerManually extends Activity {
             }
         });
 
+        ListView historyListView = findViewById(R.id.historyListView);
+        this.historyList = new ArrayList<>();
+        this.historyAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, historyList);
+        historyListView.setAdapter(historyAdapter);
+
+        loadHistory();
+
+        historyListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectedAddress = historyList.get(position);
+                hostText.setText(selectedAddress);
+                handleDoneEvent();
+            }
+        });
+
+        historyListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                final String addressToDelete = historyList.get(position);
+
+                // Create and show a confirmation dialog
+                new android.app.AlertDialog.Builder(AddComputerManually.this)
+                        .setTitle("Delete History Entry")
+                        .setMessage("Are you sure you want to delete this address from history?")
+                        .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                deleteHistoryItem(addressToDelete);
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+
+                // Return true to indicate that the long click event was handled
+                return true;
+            }
+        });
+
         // Bind to the ComputerManager service
         bindService(new Intent(AddComputerManually.this,
                     ComputerManagerService.class), serviceConnection, Service.BIND_AUTO_CREATE);
@@ -319,5 +371,48 @@ public class AddComputerManually extends Activity {
 
         computersToAdd.add(hostAddress);
         return false;
+    }
+
+    private void loadHistory() {
+        SharedPreferences sharedPref = getSharedPreferences("AddComputerHistory", Context.MODE_PRIVATE);
+        Set<String> savedAddresses = sharedPref.getStringSet("host_addresses", new HashSet<>());
+
+        historyList.clear();
+        historyList.addAll(savedAddresses);
+        Collections.sort(historyList); // Optional: sort the history list alphabetically
+        historyAdapter.notifyDataSetChanged();
+    }
+
+    private void saveHistory(String address) {
+        SharedPreferences sharedPref = getSharedPreferences("AddComputerHistory", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        Set<String> savedAddresses = new HashSet<>(sharedPref.getStringSet("host_addresses", new HashSet<>()));
+        savedAddresses.add(address);
+
+        editor.putStringSet("host_addresses", savedAddresses);
+        editor.apply();
+
+        // Update the list and the UI
+        historyList.clear();
+        historyList.addAll(savedAddresses);
+        Collections.sort(historyList);
+        historyAdapter.notifyDataSetChanged();
+    }
+
+    private void deleteHistoryItem(String address) {
+        SharedPreferences sharedPref = getSharedPreferences("AddComputerHistory", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        Set<String> savedAddresses = new HashSet<>(sharedPref.getStringSet("host_addresses", new HashSet<>()));
+        if (savedAddresses.remove(address)) {
+            editor.putStringSet("host_addresses", savedAddresses);
+            editor.apply();
+
+            // Update the list and UI
+            historyList.remove(address);
+            historyAdapter.notifyDataSetChanged();
+            Toast.makeText(this, "Address deleted.", Toast.LENGTH_SHORT).show();
+        }
     }
 }

@@ -33,7 +33,7 @@
         android:preferKeepClear="true"
         android:inputType="textNoSuggestions"
         android:hint="@string/ip_hint" >
-        
+
         <requestFocus />
     </EditText>
 
@@ -47,5 +47,22 @@
         android:layout_alignParentEnd="true"
         android:preferKeepClear="true"
         android:text="@android:string/ok"/>
-	
+
+    <TextView
+        android:id="@+id/historyTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="History"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_marginTop="25dp"
+        android:layout_below="@id/hostTextView"
+        android:layout_centerHorizontal="true"/>
+
+    <ListView
+        android:id="@+id/historyListView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/historyTitle"
+        android:layout_marginTop="10dp" />
+
 </RelativeLayout>

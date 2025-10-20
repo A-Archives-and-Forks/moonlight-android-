@@ -98,7 +98,7 @@ public class AbsoluteTouchContext implements TouchContext {
         if (actionIndex == 0) {
             // Start the timers
             startTapDownTimer();
-            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick) {
+            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleFingerTapToRightClick) {
                 startLongPressTimer();
             }
         }
@@ -131,7 +131,7 @@ public class AbsoluteTouchContext implements TouchContext {
         if (actionIndex == 0) {
             // Cancel the timers
             cancelTapDownTimer();
-            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick) {
+            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleFingerTapToRightClick) {
                 cancelLongPressTimer();
             }
 
@@ -203,7 +203,7 @@ public class AbsoluteTouchContext implements TouchContext {
         }
 
         if (actionIndex == 0) {
-            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick &&
+            if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleFingerTapToRightClick &&
                     distanceExceeds(eventX - lastTouchDownX, eventY - lastTouchDownY, LONG_PRESS_DISTANCE_THRESHOLD)) {
                 cancelLongPressTimer();
             }
@@ -229,7 +229,7 @@ public class AbsoluteTouchContext implements TouchContext {
         cancelled = true;
 
         // Cancel the timers
-        if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick) {
+        if (!PreferenceConfiguration.readPreferences(targetView.getContext()).doubleFingerTapToRightClick) {
             cancelLongPressTimer();
         }
         cancelTapDownTimer();
@@ -253,7 +253,7 @@ public class AbsoluteTouchContext implements TouchContext {
         // This is where we handle the two-finger right click.
         // It should only be handled by the main touch context (actionIndex == 0).
         if (actionIndex == 0) {
-            if (PreferenceConfiguration.readPreferences(targetView.getContext()).doubleTapToRightClick) {
+            if (PreferenceConfiguration.readPreferences(targetView.getContext()).doubleFingerTapToRightClick) {
                 if (pointerCount == 2) {
                     // If we detect two fingers, we send a right-click down event
                     // and cancel any pending single-tap events.

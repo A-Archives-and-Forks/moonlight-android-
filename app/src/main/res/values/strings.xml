@@ -231,6 +231,8 @@
     <string name="summary_checkbox_mouse_nav_buttons">Enabling this option may break right clicking on some buggy devices</string>
     <string name="title_double_tap_to_right_click">Enable two-finger tap to right click (Absolute Touch mode only)</string>
     <string name="summary_double_tap_to_right_click">Use two-finger tap to right click instead of hold to right click (Absolute Touch mode only)</string>
+    <string name="title_enable_commit_text">Enable commit-text input (swipe/voice)</string>
+    <string name="summary_enable_commit_text">Forward multi-character text from soft keyboards (gesture typing, predictions, voice dictation). May break games that rely on key-by-key input.</string>
 
     <string name="category_on_screen_controls_settings">On-screen Controls Settings</string>
     <string name="title_checkbox_show_onscreen_controls">Show on-screen controls</string>

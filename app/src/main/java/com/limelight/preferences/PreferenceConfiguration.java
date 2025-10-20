@@ -55,6 +55,7 @@ public class PreferenceConfiguration {
     private static final String MOUSE_EMULATION_STRING = "checkbox_mouse_emulation";
     private static final String ANALOG_SCROLLING_PREF_STRING = "analog_scrolling";
     private static final String DOUBLE_TAP_TO_RIGHT_CLICK_STRING = "checkbox_double_tap_to_right_click";
+    private static final String CHECKBOX_ENABLE_COMMIT_TEXT = "checkbox_enable_commit_text";
     private static final String MOUSE_NAV_BUTTONS_STRING = "checkbox_mouse_nav_buttons";
     static final String UNLOCK_FPS_STRING = "checkbox_unlock_fps";
     private static final String VIBRATE_OSC_PREF_STRING = "checkbox_vibrate_osc";
@@ -98,6 +99,7 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_MOUSE_EMULATION = true;
     private static final String DEFAULT_ANALOG_STICK_FOR_SCROLLING = "right";
     private static final boolean DEFAULT_DOUBLE_TAP_TO_RIGHT_CLICK = false;
+    private static final boolean DEFAULT_ENABLE_COMMIT_TEXT = false;
     private static final boolean DEFAULT_MOUSE_NAV_BUTTONS = false;
     private static final boolean DEFAULT_UNLOCK_FPS = false;
     private static final boolean DEFAULT_VIBRATE_OSC = true;
@@ -150,7 +152,8 @@ public class PreferenceConfiguration {
     public boolean bindAllUsb;
     public boolean mouseEmulation;
     public AnalogStickForScrolling analogStickForScrolling;
-    public boolean doubleTapToRightClick;
+    public boolean doubleFingerTapToRightClick;
+    public boolean enableCommitText;
     public boolean mouseNavButtons;
     public boolean unlockFps;
     public boolean vibrateOsc;
@@ -621,7 +624,8 @@ public class PreferenceConfiguration {
         config.enablePerfOverlay = prefs.getBoolean(ENABLE_PERF_OVERLAY_STRING, DEFAULT_ENABLE_PERF_OVERLAY);
         config.bindAllUsb = prefs.getBoolean(BIND_ALL_USB_STRING, DEFAULT_BIND_ALL_USB);
         config.mouseEmulation = prefs.getBoolean(MOUSE_EMULATION_STRING, DEFAULT_MOUSE_EMULATION);
-        config.doubleTapToRightClick = prefs.getBoolean(DOUBLE_TAP_TO_RIGHT_CLICK_STRING, DEFAULT_DOUBLE_TAP_TO_RIGHT_CLICK);
+        config.doubleFingerTapToRightClick = prefs.getBoolean(DOUBLE_TAP_TO_RIGHT_CLICK_STRING, DEFAULT_DOUBLE_TAP_TO_RIGHT_CLICK);
+        config.enableCommitText = prefs.getBoolean(CHECKBOX_ENABLE_COMMIT_TEXT, DEFAULT_ENABLE_COMMIT_TEXT);
         config.mouseNavButtons = prefs.getBoolean(MOUSE_NAV_BUTTONS_STRING, DEFAULT_MOUSE_NAV_BUTTONS);
         config.unlockFps = prefs.getBoolean(UNLOCK_FPS_STRING, DEFAULT_UNLOCK_FPS);
         config.vibrateOsc = prefs.getBoolean(VIBRATE_OSC_PREF_STRING, DEFAULT_VIBRATE_OSC);

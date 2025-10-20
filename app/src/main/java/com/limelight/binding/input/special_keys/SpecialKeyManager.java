@@ -69,8 +69,6 @@ public class SpecialKeyManager {
                     new short[]{KeyboardTranslator.VK_LWIN, KeyboardTranslator.VK_D}));
             defaultKeys.add(new CustomKey(context.getString(R.string.game_menu_send_keys_win_g),
                     new short[]{KeyboardTranslator.VK_LWIN, KeyboardTranslator.VK_G}));
-            defaultKeys.add(new CustomKey(context.getString(R.string.game_menu_send_keys_shift_tab),
-                    new short[]{KeyboardTranslator.VK_LSHIFT, KeyboardTranslator.VK_TAB}));
             defaultKeys.add(new CustomKey(context.getString(R.string.game_menu_send_move_window),
                     new short[]{KeyboardTranslator.VK_LWIN, KeyboardTranslator.VK_LSHIFT, KeyboardTranslator.VK_RIGHT}));
 

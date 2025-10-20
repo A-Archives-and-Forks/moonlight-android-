@@ -7,8 +7,8 @@
     android:paddingTop="16dp"
     android:paddingRight="16dp">
 
-    <ListView
-        android:id="@+id/custom_keys_list_view"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/custom_keys_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="16dp"

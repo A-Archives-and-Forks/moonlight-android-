@@ -8,6 +8,8 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Class to translate a Android key code into the codes GFE is expecting
@@ -63,6 +65,54 @@ public class KeyboardTranslator implements InputManager.InputDeviceListener {
     public static final int VK_MENU = 18; //Alt key
     public static final int VK_RETURN = 13; //Enter key
     public static final int VK_INSERT = 45;
+
+    public static final Map<Short, String> KEY_NAMES = new HashMap<>();
+    static {
+        KEY_NAMES.put((short) 0x1B, "ESC");
+        KEY_NAMES.put((short) 0x70, "F1");
+        KEY_NAMES.put((short) 0x71, "F2");
+        KEY_NAMES.put((short) 0x72, "F3");
+        KEY_NAMES.put((short) 0x73, "F4");
+        KEY_NAMES.put((short) 0x74, "F5");
+        KEY_NAMES.put((short) 0x75, "F6");
+        KEY_NAMES.put((short) 0x76, "F7");
+        KEY_NAMES.put((short) 0x77, "F8");
+        KEY_NAMES.put((short) 0x78, "F9");
+        KEY_NAMES.put((short) 0x79, "F10");
+        KEY_NAMES.put((short) 0x7A, "F11");
+        KEY_NAMES.put((short) 0x7B, "F12");
+        KEY_NAMES.put((short) 0x2D, "Ins");
+        KEY_NAMES.put((short) 0x2E, "Del");
+        KEY_NAMES.put((short) 0x08, "Back");
+        KEY_NAMES.put((short) 0x09, "Tab");
+        KEY_NAMES.put((short) 0x0D, "Enter");
+        KEY_NAMES.put((short) 0x20, "Space");
+        KEY_NAMES.put((short) 0xA0, "L-Shift");
+        KEY_NAMES.put((short) 0xA1, "R-Shift");
+        KEY_NAMES.put((short) 0xA2, "L-Ctrl");
+        KEY_NAMES.put((short) 0xA3, "R-Ctrl");
+        KEY_NAMES.put((short) 0xA4, "L-Alt");
+        KEY_NAMES.put((short) 0xA5, "R-Alt");
+        KEY_NAMES.put((short) 0x5B, "L-Win");
+        KEY_NAMES.put((short) 0x5C, "R-Win");
+        KEY_NAMES.put((short) 0x5D, "Menu");
+        KEY_NAMES.put((short) 0x25, "Left");
+        KEY_NAMES.put((short) 0x26, "Up");
+        KEY_NAMES.put((short) 0x27, "Right");
+        KEY_NAMES.put((short) 0x28, "Down");
+        KEY_NAMES.put((short) 0x21, "PgUp");
+        KEY_NAMES.put((short) 0x22, "PgDn");
+        KEY_NAMES.put((short) 0x24, "Home");
+        KEY_NAMES.put((short) 0x23, "End");
+        KEY_NAMES.put((short) 0x90, "NumLock");
+        KEY_NAMES.put((short) 0x91, "ScrLock");
+        KEY_NAMES.put((short) 0x9A, "PrntScrn");
+        KEY_NAMES.put((short) 0x14, "Caps Lock");
+        KEY_NAMES.put((short) 0x13, "Pause");
+
+        for (short i = 0x30; i <= 0x39; i++) KEY_NAMES.put(i, String.valueOf((char)(i)));
+        for (short i = 0x41; i <= 0x5A; i++) KEY_NAMES.put(i, String.valueOf((char)(i)));
+    }
 
     private static class KeyboardMapping {
         private final InputDevice device;

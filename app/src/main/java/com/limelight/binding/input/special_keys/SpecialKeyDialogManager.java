@@ -1,20 +1,25 @@
 package com.limelight.binding.input.special_keys;
 
+import static com.limelight.binding.input.KeyboardTranslator.KEY_NAMES;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.Gravity;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.limelight.R;
 import com.limelight.binding.input.KeyboardTranslator;
@@ -22,8 +27,6 @@ import com.limelight.binding.input.KeyboardTranslator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SpecialKeyDialogManager {
 
@@ -32,57 +35,10 @@ public class SpecialKeyDialogManager {
     private final KeyboardTranslator keyboardTranslator;
     private AlertDialog currentListDialog;
     private CustomSpecialKeyDataChangeListener dataChangeListener;
+    private ItemTouchHelper itemTouchHelper;
 
     public interface OnKeysSelectedListener {
         void onKeysSelected(short[] selectedKeys);
-    }
-
-    private static final Map<Short, String> KEY_NAMES = new HashMap<>();
-    static {
-        KEY_NAMES.put((short) 0x1B, "ESC");
-        KEY_NAMES.put((short) 0x70, "F1");
-        KEY_NAMES.put((short) 0x71, "F2");
-        KEY_NAMES.put((short) 0x72, "F3");
-        KEY_NAMES.put((short) 0x73, "F4");
-        KEY_NAMES.put((short) 0x74, "F5");
-        KEY_NAMES.put((short) 0x75, "F6");
-        KEY_NAMES.put((short) 0x76, "F7");
-        KEY_NAMES.put((short) 0x77, "F8");
-        KEY_NAMES.put((short) 0x78, "F9");
-        KEY_NAMES.put((short) 0x79, "F10");
-        KEY_NAMES.put((short) 0x7A, "F11");
-        KEY_NAMES.put((short) 0x7B, "F12");
-        KEY_NAMES.put((short) 0x2D, "Ins");
-        KEY_NAMES.put((short) 0x2E, "Del");
-        KEY_NAMES.put((short) 0x08, "Back");
-        KEY_NAMES.put((short) 0x09, "Tab");
-        KEY_NAMES.put((short) 0x0D, "Enter");
-        KEY_NAMES.put((short) 0x20, "Space");
-        KEY_NAMES.put((short) 0xA0, "L-Shift");
-        KEY_NAMES.put((short) 0xA1, "R-Shift");
-        KEY_NAMES.put((short) 0xA2, "L-Ctrl");
-        KEY_NAMES.put((short) 0xA3, "R-Ctrl");
-        KEY_NAMES.put((short) 0xA4, "L-Alt");
-        KEY_NAMES.put((short) 0xA5, "R-Alt");
-        KEY_NAMES.put((short) 0x5B, "L-Win");
-        KEY_NAMES.put((short) 0x5C, "R-Win");
-        KEY_NAMES.put((short) 0x5D, "Menu");
-        KEY_NAMES.put((short) 0x25, "Left");
-        KEY_NAMES.put((short) 0x26, "Up");
-        KEY_NAMES.put((short) 0x27, "Right");
-        KEY_NAMES.put((short) 0x28, "Down");
-        KEY_NAMES.put((short) 0x21, "PgUp");
-        KEY_NAMES.put((short) 0x22, "PgDn");
-        KEY_NAMES.put((short) 0x24, "Home");
-        KEY_NAMES.put((short) 0x23, "End");
-        KEY_NAMES.put((short) 0x90, "NumLock");
-        KEY_NAMES.put((short) 0x91, "ScrLock");
-        KEY_NAMES.put((short) 0x9A, "PrntScrn");
-        KEY_NAMES.put((short) 0x14, "Caps Lock");
-        KEY_NAMES.put((short) 0x13, "Pause");
-
-        for (short i = 0x30; i <= 0x39; i++) KEY_NAMES.put(i, String.valueOf((char)(i)));
-        for (short i = 0x41; i <= 0x5A; i++) KEY_NAMES.put(i, String.valueOf((char)(i)));
     }
 
     public SpecialKeyDialogManager(Context context, SpecialKeyManager specialKeyManager, CustomSpecialKeyDataChangeListener listener) {
@@ -98,18 +54,43 @@ public class SpecialKeyDialogManager {
         builder.setView(dialogView);
         builder.setTitle(context.getString(R.string.game_menu_manage_custom_keys));
 
-        ListView customKeysListView = dialogView.findViewById(R.id.custom_keys_list_view);
+        RecyclerView recyclerView = dialogView.findViewById(R.id.custom_keys_recycler_view);
         Button addCustomKeyButton = dialogView.findViewById(R.id.add_custom_key_button);
 
-        updateCustomKeysListInDialog(customKeysListView);
+        List<SpecialKeyManager.CustomKey> customKeys = specialKeyManager.getCustomKeys();
+        // set up RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(context));
+        CustomKeysAdapter.StartDragListener startDragListener = viewHolder -> itemTouchHelper.startDrag(viewHolder);
 
-        addCustomKeyButton.setOnClickListener(v -> showAddEditCustomKeyDialog(null, customKeysListView));
+        // Create a holder for the adapter so callbacks can access it
+        final CustomKeysAdapter[] adapterHolder = new CustomKeysAdapter[1];
+
+        CustomKeysAdapter adapter = new CustomKeysAdapter(context, recyclerView, customKeys,
+                new CustomKeysAdapter.Callbacks() {
+
+                    @Override
+                    public void onClick(SpecialKeyManager.CustomKey key, int position) {
+                        showEditDeleteCustomKeyDialog(key, adapterHolder[0]);
+                    }
+
+                    @Override
+                    public void onListReordered(List<SpecialKeyManager.CustomKey> newList) {
+                        specialKeyManager.saveCustomKeys(newList);
+                        if (dataChangeListener != null) dataChangeListener.onCustomKeyDataChanged();
+                    }
+                },
+                startDragListener
+        );
+
+        // Assign it to the holder after initialization
+        adapterHolder[0] = adapter;
+        recyclerView.setAdapter(adapter);
+
+        addCustomKeyButton.setOnClickListener(v -> showAddEditCustomKeyDialog(null, adapterHolder[0]));
 
         builder.setNegativeButton(R.string.button_done, (dialog, which) -> {
             dialog.dismiss();
-            if (dataChangeListener != null) {
-                dataChangeListener.onCustomKeyDataChanged();
-            }
+            if (dataChangeListener != null) dataChangeListener.onCustomKeyDataChanged();
         });
 
         builder.setNeutralButton(R.string.button_reset, (dialog, which) -> {
@@ -118,7 +99,7 @@ public class SpecialKeyDialogManager {
                     .setMessage(R.string.dialog_confirm_reset_message)
                     .setPositiveButton(R.string.button_reset_all, (confirmDialog, confirmWhich) -> {
                         specialKeyManager.resetToDefaults();
-                        updateCustomKeysListInDialog(customKeysListView);
+                        adapter.updateList(specialKeyManager.getCustomKeys());
                         if (dataChangeListener != null) {
                             dataChangeListener.onCustomKeyDataChanged();
                         }
@@ -130,25 +111,40 @@ public class SpecialKeyDialogManager {
         });
 
         currentListDialog = builder.create();
+
+        // Create ItemTouchHelper (must be after adapter/recyclerView set)
+        itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                int from = viewHolder.getAdapterPosition();
+                int to = target.getAdapterPosition();
+                adapter.moveItem(from, to);
+                return true;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                // no-op
+            }
+
+            @Override
+            public boolean isLongPressDragEnabled() {
+                // false so drag only starts when user touches handle
+                return false;
+            }
+        });
+
+        // attach to recycler
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+
         currentListDialog.show();
     }
 
-    private void updateCustomKeysListInDialog(ListView listView) {
-        List<SpecialKeyManager.CustomKey> currentCustomKeys = specialKeyManager.getCustomKeys();
-        List<String> labels = new ArrayList<>();
-        for (SpecialKeyManager.CustomKey key : currentCustomKeys) {
-            labels.add(key.label + " (" + keysToString(key.keys) + ")");
-        }
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, labels);
-        listView.setAdapter(adapter);
-
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            showEditDeleteCustomKeyDialog(currentCustomKeys.get(position), listView);
-        });
-    }
-
-    private void showAddEditCustomKeyDialog(final SpecialKeyManager.CustomKey customKeyToEdit, ListView listViewToRefresh) {
+    private void showAddEditCustomKeyDialog(final SpecialKeyManager.CustomKey customKeyToEdit, CustomKeysAdapter adapter) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         final boolean isEditMode = (customKeyToEdit != null);
 
@@ -231,7 +227,7 @@ public class SpecialKeyDialogManager {
                 Toast.makeText(context, R.string.toast_custom_key_added, Toast.LENGTH_SHORT).show();
             }
 
-            updateCustomKeysListInDialog(listViewToRefresh);
+            adapter.updateList(specialKeyManager.getCustomKeys());
             if (dataChangeListener != null) {
                 dataChangeListener.onCustomKeyDataChanged();
             }
@@ -324,18 +320,18 @@ public class SpecialKeyDialogManager {
         });
     }
 
-    private void showEditDeleteCustomKeyDialog(final SpecialKeyManager.CustomKey customKey, ListView listViewToRefresh) {
+    private void showEditDeleteCustomKeyDialog(final SpecialKeyManager.CustomKey customKey, CustomKeysAdapter adapter) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(R.string.dialog_edit_delete_custom_key_title);
         builder.setMessage(context.getString(R.string.dialog_edit_delete_custom_key_message, customKey.label));
 
         builder.setPositiveButton(R.string.button_edit, (dialog, which) -> {
             // Call the consolidated method for editing
-            showAddEditCustomKeyDialog(customKey, listViewToRefresh);
+            showAddEditCustomKeyDialog(customKey, adapter);
         });
         builder.setNegativeButton(R.string.button_delete, (dialog, which) -> {
             specialKeyManager.removeCustomKey(customKey);
-            updateCustomKeysListInDialog(listViewToRefresh);
+            adapter.updateList(specialKeyManager.getCustomKeys());
             if (dataChangeListener != null) {
                 dataChangeListener.onCustomKeyDataChanged();
             }

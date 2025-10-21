@@ -23,18 +23,24 @@ public class GameMenu implements CustomSpecialKeyDataChangeListener {
     private static final long KEY_UP_DELAY = 25;
 
     public static class MenuOption {
-        private final String label;
-        private final boolean withGameFocus;
-        private final Runnable runnable;
+        public final String label;
+        public final boolean withGameFocus;
+        public final Runnable runnable;
+        public final Runnable longPressRunnable; // new field
+
+        public MenuOption(String label, Runnable runnable) {
+            this(label, false, runnable, null);
+        }
 
         public MenuOption(String label, boolean withGameFocus, Runnable runnable) {
+            this(label, withGameFocus, runnable, null);
+        }
+
+        public MenuOption(String label, boolean withGameFocus, Runnable runnable, Runnable longPressRunnable) {
             this.label = label;
             this.withGameFocus = withGameFocus;
             this.runnable = runnable;
-        }
-
-        public MenuOption(String label, Runnable runnable) {
-            this(label, false, runnable);
+            this.longPressRunnable = longPressRunnable;
         }
     }
 
@@ -116,6 +122,13 @@ public class GameMenu implements CustomSpecialKeyDataChangeListener {
         game.runOnUiThread(() -> {
             View sidebar = game.findViewById(R.id.game_menu_sidebar);
 
+//            View settingsButton = sidebar.findViewById(R.id.menu_settings_button);
+//            if (settingsButton != null) {
+//                settingsButton.setOnClickListener(v -> {
+//                    game.openStreamSettings();
+//                });
+//            }
+
             TextView disconnect = sidebar.findViewById(R.id.disconnect_text);
             disconnect.setOnClickListener(v -> game.disconnect());
 
@@ -139,6 +152,19 @@ public class GameMenu implements CustomSpecialKeyDataChangeListener {
 
                 int realPosition = isSubMenu ? position - 1 : position;
                 run(options[realPosition]);
+            });
+
+            // Handle long-press events
+            listView.setOnItemLongClickListener((parent, view, position, id) -> {
+                int realPosition = isSubMenu ? position - 1 : position;
+                if (realPosition >= 0 && realPosition < options.length) {
+                    MenuOption opt = options[realPosition];
+                    if (opt.longPressRunnable != null) {
+                        opt.longPressRunnable.run();
+                        return true;
+                    }
+                }
+                return false;
             });
 
             sidebar.setVisibility(View.VISIBLE);
@@ -174,8 +200,12 @@ public class GameMenu implements CustomSpecialKeyDataChangeListener {
         List<MenuOption> configOptions = new ArrayList<>();
         configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_performance_overlay), game::togglePerformanceOverlay));
         configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_virtual_controller), game::toggleVirtualController));
-        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_floating_button), true,
-                game::toggleFloatingButtonVisibility));
+        configOptions.add(new MenuOption(
+                getString(R.string.game_menu_toggle_floating_button),
+                true,
+                game::toggleFloatingButtonVisibility,
+                game::toggleMenuButtonVisibility // long-press executes this
+        ));
         configOptions.add(new MenuOption("Configure Virtual Controller", () -> {
             if (game.virtualController != null) {
                 game.virtualController.toggleConfigurationMode(game);

@@ -198,7 +198,8 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     public static final String EXTRA_SERVER_CERT = "ServerCert";
 
     //Floating button
-    private ImageButton floatingButton;
+    private ImageButton floatingKeyboardButton;
+    private ImageButton floatingMenuButton;
     private float floatingButtonDX, floatingButtonDY;
     private boolean isButtonMoving = false;
     private static final float CLICK_ACTION_THRESHOLD = 5;
@@ -596,67 +597,86 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         // The connection will be started when the surface gets created
         streamView.getHolder().addCallback(this);
 
-        floatingButton = findViewById(R.id.floatingButton);
-        if (prefConfig.onscreenFloatingButton) {
-            floatingButton.setVisibility(View.VISIBLE);
-        } else {
-            floatingButton.setVisibility(View.GONE);
-        }
-        initFloatingButton();
+        //
+        floatingKeyboardButton = findViewById(R.id.floatingKeyboardButton);
+        floatingMenuButton = findViewById(R.id.floatingMenuButton);
+        floatingKeyboardButton.setVisibility(prefConfig.onscreenFloatingButton ? View.VISIBLE : View.GONE);
+        floatingMenuButton.setVisibility(prefConfig.onscreenFloatingButton ? View.INVISIBLE : View.GONE);
+        initFloatingButtons();
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private void initFloatingButton() {
-        // Touch listener for drag and click
-        if (floatingButton != null) {
-            floatingButton.setOnTouchListener((view, event) -> {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        floatingButtonStartX = event.getRawX();
-                        floatingButtonStartY = event.getRawY();
-                        floatingButtonDX = view.getX() - event.getRawX();
-                        floatingButtonDY = view.getY() - event.getRawY();
-                        isButtonMoving = false;
-                        return true;
-                    case MotionEvent.ACTION_MOVE:
-                        float newX = event.getRawX() + floatingButtonDX;
-                        float newY = event.getRawY() + floatingButtonDY;
+    private void initFloatingButtons() {
+        if (floatingKeyboardButton == null || floatingMenuButton == null) return;
 
-                        // Check if it's a move or just a tap
-                        if (Math.abs(event.getRawX() - floatingButtonStartX) > CLICK_ACTION_THRESHOLD ||
-                                Math.abs(event.getRawY() - floatingButtonStartY) > CLICK_ACTION_THRESHOLD) {
-                            isButtonMoving = true;
-                        }
+        // Shared touch listener logic as a reusable function
+        View.OnTouchListener floatingButtonTouchListener = (view, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    floatingButtonStartX = event.getRawX();
+                    floatingButtonStartY = event.getRawY();
+                    floatingButtonDX = view.getX() - event.getRawX();
+                    floatingButtonDY = view.getY() - event.getRawY();
+                    isButtonMoving = false;
+                    return true;
 
-                        // Ensure the button stays within screen bounds
-                        if (newX < 0) newX = 0;
-                        if (newY < 0) newY = 0;
+                case MotionEvent.ACTION_MOVE:
+                    float newX = event.getRawX() + floatingButtonDX;
+                    float newY = event.getRawY() + floatingButtonDY;
 
-                        int maxOffsetX = getWindow().getDecorView().getWidth() - view.getWidth();
-                        if (newX > maxOffsetX) {
-                            newX = maxOffsetX;
-                        }
+                    // Detect movement beyond threshold
+                    if (Math.abs(event.getRawX() - floatingButtonStartX) > CLICK_ACTION_THRESHOLD ||
+                            Math.abs(event.getRawY() - floatingButtonStartY) > CLICK_ACTION_THRESHOLD) {
+                        isButtonMoving = true;
+                    }
 
-                        int maxOffsetY = getWindow().getDecorView().getHeight() - view.getHeight();
-                        if (newY > maxOffsetY) {
-                            newY = maxOffsetY;
-                        }
+                    // Stay within screen bounds
+                    if (newX < 0) newX = 0;
+                    if (newY < 0) newY = 0;
 
-                        view.setX(newX);
-                        view.setY(newY);
-                        return true;
-                    case MotionEvent.ACTION_UP:
-                        if (!isButtonMoving) {
-                            // It's a click event, show menu
+                    int maxOffsetX = getWindow().getDecorView().getWidth() - view.getWidth();
+                    int maxOffsetY = getWindow().getDecorView().getHeight() - view.getHeight();
+
+                    if (newX > maxOffsetX) newX = maxOffsetX;
+                    if (newY > maxOffsetY) newY = maxOffsetY;
+
+                    view.setX(newX);
+                    view.setY(newY);
+                    return true;
+
+                case MotionEvent.ACTION_UP:
+                    if (!isButtonMoving) {
+                        if (view == floatingKeyboardButton) {
                             toggleKeyboard();
+                        } else if (view == floatingMenuButton) {
+                            View sidebar = findViewById(R.id.game_menu_sidebar);
+                            if (sidebar != null && sidebar.getVisibility() == View.VISIBLE) {
+                                closeSidebar();
+                            } else {
+                                showGameMenu(null);
+                            }
                         }
-                        isButtonMoving = false;
-                        return true;
-                    default:
-                        return false;
-                }
-            });
-        }
+                    }
+                    isButtonMoving = false;
+                    return true;
+
+                default:
+                    return false;
+            }
+        };
+
+        floatingKeyboardButton.setOnTouchListener(floatingButtonTouchListener);
+        floatingMenuButton.setOnTouchListener(floatingButtonTouchListener);
+
+        floatingKeyboardButton.post(() -> {
+            float keyboardX = floatingKeyboardButton.getX();
+            float keyboardY = floatingKeyboardButton.getY();
+
+            // Offset to the left (100px)
+            float offset = 100f;
+            floatingMenuButton.setX(Math.max(0, keyboardX - offset));
+            floatingMenuButton.setY(keyboardY);
+        });
     }
 
     private void setPreferredOrientationForCurrentDisplay() {
@@ -715,10 +735,11 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             if (isInPictureInPictureMode()) {
                 isHidingOverlays = true;
 
-                floatingButtonShown = floatingButton.isShown();
+                floatingButtonShown = floatingKeyboardButton.isShown() || floatingMenuButton.isShown();
 
                 if (floatingButtonShown) {
-                    floatingButton.setVisibility(View.GONE);
+                    floatingKeyboardButton.setVisibility(View.GONE);
+                    floatingMenuButton.setVisibility(View.GONE);
                 }
 
                 if (virtualController != null && prefConfig.onscreenController) {
@@ -739,7 +760,8 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 isHidingOverlays = false;
 
                 if (floatingButtonShown) {
-                    floatingButton.setVisibility(View.VISIBLE);
+                    floatingKeyboardButton.setVisibility(View.VISIBLE);
+                    floatingMenuButton.setVisibility(View.VISIBLE);
                 }
 
                 // Restore overlays to previous state when leaving PiP
@@ -2988,8 +3010,16 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         editor.putBoolean(PREF_KEY_OSC, prefConfig.onscreenFloatingButton);
         editor.apply();
 
-        if (floatingButton != null) {
-            floatingButton.setVisibility(prefConfig.onscreenFloatingButton ? View.VISIBLE : View.GONE);
+        if (floatingKeyboardButton != null) {
+            floatingKeyboardButton.setVisibility(prefConfig.onscreenFloatingButton ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    public void toggleMenuButtonVisibility() {
+        if (floatingMenuButton != null) {
+            floatingMenuButton.setVisibility(
+                    floatingMenuButton.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE
+            );
         }
     }
 
@@ -3039,4 +3069,16 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             commitTextHandler.post(flushCommitTextQueue);
         }
     }
+
+    // Disabled until i figured it out
+//    public void openStreamSettings() {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            try {
+//                PictureInPictureParams params = new PictureInPictureParams.Builder().build();
+//                enterPictureInPictureMode(params);
+//            } catch (Exception ignored) {
+//            }
+//        }
+//        closeSidebar();
+//    }
 }

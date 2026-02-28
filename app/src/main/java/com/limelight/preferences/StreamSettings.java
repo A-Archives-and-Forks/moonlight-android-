@@ -43,6 +43,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +59,12 @@ public class StreamSettings extends Activity {
 
     private static final int REQUEST_CODE_EXPORT_OSC = 1001;
     private static final int REQUEST_CODE_IMPORT_OSC = 1002;
+
+    private String currentSearchQuery = "";
+
+    public String getCurrentSearchQuery() {
+        return currentSearchQuery;
+    }
 
     // HACK for Android 9
     static DisplayCutout displayCutoutP;
@@ -81,6 +88,79 @@ public class StreamSettings extends Activity {
         UiHelper.setLocale(this);
 
         setContentView(R.layout.activity_stream_settings);
+
+        android.widget.SearchView searchView = findViewById(R.id.settings_search_view);
+
+        if (searchView != null) {
+
+            // Set rounded background
+            searchView.setBackgroundResource(R.drawable.rounded_search_background);
+
+            // Remove underline (search_plate)
+            int plateId = searchView.getContext()
+                    .getResources()
+                    .getIdentifier("android:id/search_plate", null, null);
+            View searchPlate = searchView.findViewById(plateId);
+            if (searchPlate != null) {
+                searchPlate.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            }
+
+            // Remove inner text underline + style text
+            int textId = searchView.getContext()
+                    .getResources()
+                    .getIdentifier("android:id/search_src_text", null, null);
+            android.widget.EditText searchText =
+                    searchView.findViewById(textId);
+
+            if (searchText != null) {
+                searchText.setTextColor(android.graphics.Color.WHITE);
+                searchText.setHintTextColor(android.graphics.Color.GRAY);
+                searchText.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            }
+
+            // Optional: tint search icon
+            int iconId = searchView.getContext()
+                    .getResources()
+                    .getIdentifier("android:id/search_mag_icon", null, null);
+            android.widget.ImageView icon =
+                    searchView.findViewById(iconId);
+
+            if (icon != null) {
+                icon.setColorFilter(android.graphics.Color.GRAY);
+            }
+
+            // Keep your listeners
+            searchView.setOnQueryTextListener(new android.widget.SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    return false;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    currentSearchQuery = newText;
+                    SettingsFragment fragment = (SettingsFragment) getFragmentManager()
+                            .findFragmentById(R.id.stream_settings);
+                    if (fragment != null) {
+                        fragment.filterPreferences(newText);
+                    }
+                    return true;
+                }
+            });
+
+            searchView.setOnCloseListener(new android.widget.SearchView.OnCloseListener() {
+                @Override
+                public boolean onClose() {
+                    currentSearchQuery = "";
+                    SettingsFragment fragment = (SettingsFragment) getFragmentManager()
+                            .findFragmentById(R.id.stream_settings);
+                    if (fragment != null) {
+                        fragment.filterPreferences("");
+                    }
+                    return false;
+                }
+            });
+        }
 
         UiHelper.notifyNewRootView(this);
     }
@@ -142,6 +222,101 @@ public class StreamSettings extends Activity {
     public static class SettingsFragment extends PreferenceFragment {
         private int nativeResolutionStartIndex = Integer.MAX_VALUE;
         private boolean nativeFramerateShown = false;
+
+        private List<PreferenceCategory> allCategories = null;
+        private Map<PreferenceCategory, List<Preference>> categoryToPreferences = null;
+
+        private Preference findPreferenceInAll(String key) {
+            for (List<Preference> list : categoryToPreferences.values()) {
+                for (Preference p : list) {
+                    if (key.equals(p.getKey()))
+                        return p;
+                }
+            }
+            return null;
+        }
+
+        public void filterPreferences(String query) {
+            PreferenceScreen screen = getPreferenceScreen();
+            if (screen == null)
+                return;
+
+            if (allCategories == null) {
+                allCategories = new ArrayList<>();
+                categoryToPreferences = new java.util.HashMap<>();
+                for (int i = 0; i < screen.getPreferenceCount(); i++) {
+                    Preference p = screen.getPreference(i);
+                    if (p instanceof PreferenceCategory) {
+                        PreferenceCategory cat = (PreferenceCategory) p;
+                        allCategories.add(cat);
+                        List<Preference> children = new ArrayList<>();
+                        for (int j = 0; j < cat.getPreferenceCount(); j++) {
+                            children.add(cat.getPreference(j));
+                        }
+                        categoryToPreferences.put(cat, children);
+                    }
+                }
+            }
+
+            screen.removeAll();
+            query = query == null ? "" : query.toLowerCase();
+
+            java.util.Set<Preference> allItemsToAdd = new java.util.HashSet<>();
+            for (PreferenceCategory cat : allCategories) {
+                for (Preference pref : categoryToPreferences.get(cat)) {
+                    boolean match = false;
+                    if (query.isEmpty()) {
+                        match = true;
+                    } else {
+                        if (pref.getTitle() != null && pref.getTitle().toString().toLowerCase().contains(query))
+                            match = true;
+                        if (pref.getSummary() != null && pref.getSummary().toString().toLowerCase().contains(query))
+                            match = true;
+                    }
+
+                    if (match) {
+                        allItemsToAdd.add(pref);
+
+                        String depKey = pref.getDependency();
+                        while (depKey != null && !depKey.isEmpty()) {
+                            Preference depPref = findPreferenceInAll(depKey);
+                            if (depPref != null) {
+                                allItemsToAdd.add(depPref);
+                                depKey = depPref.getDependency();
+                            } else {
+                                depKey = null;
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (PreferenceCategory cat : allCategories) {
+                cat.removeAll();
+                boolean hasVisibleChild = false;
+
+                for (Preference pref : categoryToPreferences.get(cat)) {
+                    if (allItemsToAdd.contains(pref)) {
+                        cat.addPreference(pref);
+                        hasVisibleChild = true;
+                    }
+                }
+
+                if (hasVisibleChild) {
+                    screen.addPreference(cat);
+                }
+            }
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            StreamSettings activity = (StreamSettings) getActivity();
+            if (activity != null && activity.getCurrentSearchQuery() != null
+                    && !activity.getCurrentSearchQuery().isEmpty()) {
+                filterPreferences(activity.getCurrentSearchQuery());
+            }
+        }
 
         private void setValue(String preferenceKey, String value) {
             ListPreference pref = (ListPreference) findPreference(preferenceKey);
@@ -393,8 +568,7 @@ public class StreamSettings extends Activity {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
                     !getActivity().getPackageManager().hasSystemFeature("android.software.picture_in_picture") ||
                     getActivity().getPackageManager().hasSystemFeature("com.amazon.software.fireos")) {
-                PreferenceCategory category =
-                        (PreferenceCategory) findPreference("category_ui_settings");
+                PreferenceCategory category = (PreferenceCategory) findPreference("category_ui_settings");
                 category.removePreference(findPreference("checkbox_enable_pip"));
             }
 
@@ -807,22 +981,20 @@ public class StreamSettings extends Activity {
 
         private void importOscPreferences(Uri uri) {
             Context ctx = getActivity();
-            File inFile = new File(ctx.getExternalFilesDir(null), "OSC.xml");
 
-            if (!inFile.exists()) {
-                Toast.makeText(ctx, "OSC.xml not found", Toast.LENGTH_LONG).show();
+            if (uri == null) {
+                Toast.makeText(ctx, "No file selected", Toast.LENGTH_LONG).show();
                 return;
             }
 
-            try {
-                FileInputStream fis = new FileInputStream(inFile);
+            try (InputStream fis = ctx.getContentResolver().openInputStream(uri)) {
 
                 XmlPullParser parser = Xml.newPullParser();
                 parser.setInput(fis, "UTF-8");
 
                 SharedPreferences oscPrefs = ctx.getSharedPreferences("OSC", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = oscPrefs.edit();
-                editor.clear(); // optional: wipe existing before importing
+                editor.clear();
 
                 int eventType = parser.getEventType();
                 while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -835,11 +1007,9 @@ public class StreamSettings extends Activity {
                 }
 
                 editor.apply();
-                fis.close();
+                Toast.makeText(ctx, "OSC import successful", Toast.LENGTH_LONG).show();
 
-                Toast.makeText(ctx, "OSC imported from " + inFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Toast.makeText(ctx, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }

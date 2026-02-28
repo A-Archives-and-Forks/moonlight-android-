@@ -1,8 +1,22 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/stream_settings"
+    android:orientation="vertical"
+    android:paddingBottom="16dp"
     tools:context=".preferences.StreamSettings">
 
-</RelativeLayout>
+    <SearchView
+        android:id="@+id/settings_search_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:queryHint="Search settings"
+        android:iconifiedByDefault="false" />
+
+    <FrameLayout
+        android:id="@+id/stream_settings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>

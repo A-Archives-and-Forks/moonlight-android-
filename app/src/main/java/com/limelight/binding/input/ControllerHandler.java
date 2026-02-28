@@ -127,6 +127,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private final Handler backgroundThreadHandler;
     private boolean hasGameController;
     private boolean stopped = false;
+    private boolean oscArrivalSent = false;
 
     private final PreferenceConfiguration prefConfig;
     private short currentControllers, initialControllers;
@@ -289,6 +290,9 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         }
 
         deviceVibrator.cancel();
+
+        // Clean up any sensor listeners registered for the OSC's defaultContext
+        defaultContext.disableSensors();
     }
 
     public void destroy() {
@@ -305,6 +309,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             InputDeviceContext deviceContext = inputDeviceContexts.valueAt(i);
             deviceContext.disableSensors();
         }
+        defaultContext.disableSensors();
     }
 
     public void enableSensors() {
@@ -316,6 +321,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             InputDeviceContext deviceContext = inputDeviceContexts.valueAt(i);
             deviceContext.enableSensors();
         }
+        defaultContext.enableSensors();
     }
 
     private static boolean hasJoystickAxes(InputDevice device) {
@@ -2290,6 +2296,49 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 break;
             }
         }
+
+        // Also handle motion events for the OSC's defaultContext
+        if (defaultContext.controllerNumber == controllerNumber && defaultContext.sensorManager != null) {
+            switch (motionType) {
+                case MoonBridge.LI_MOTION_TYPE_ACCEL:
+                    defaultContext.accelReportRateHz = reportRateHz;
+                    break;
+                case MoonBridge.LI_MOTION_TYPE_GYRO:
+                    defaultContext.gyroReportRateHz = reportRateHz;
+                    break;
+            }
+
+            backgroundThreadHandler.removeCallbacks(defaultContext.enableSensorRunnable);
+
+            SensorManager sm = defaultContext.sensorManager;
+
+            switch (motionType) {
+                case MoonBridge.LI_MOTION_TYPE_ACCEL:
+                    if (defaultContext.accelListener != null) {
+                        sm.unregisterListener(defaultContext.accelListener);
+                        defaultContext.accelListener = null;
+                    }
+
+                    Sensor accelSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                    if (reportRateHz != 0 && accelSensor != null) {
+                        defaultContext.accelListener = createSensorListener(controllerNumber, motionType, true);
+                        sm.registerListener(defaultContext.accelListener, accelSensor, 1000000 / reportRateHz);
+                    }
+                    break;
+                case MoonBridge.LI_MOTION_TYPE_GYRO:
+                    if (defaultContext.gyroListener != null) {
+                        sm.unregisterListener(defaultContext.gyroListener);
+                        defaultContext.gyroListener = null;
+                    }
+
+                    Sensor gyroSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                    if (reportRateHz != 0 && gyroSensor != null) {
+                        defaultContext.gyroListener = createSensorListener(controllerNumber, motionType, true);
+                        sm.registerListener(defaultContext.gyroListener, gyroSensor, 1000000 / reportRateHz);
+                    }
+                    break;
+            }
+        }
     }
 
     public void handleSetControllerLED(short controllerNumber, byte r, byte g, byte b) {
@@ -2793,6 +2842,18 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                                short leftStickX, short leftStickY,
                                short rightStickX, short rightStickY,
                                byte leftTrigger, byte rightTrigger) {
+        // Lazily assign the device's built-in sensors for motion sensor fallback.
+        // This is done here rather than in the constructor so it works even when
+        // the OSC is toggled on mid-stream via the GameMenu.
+        if (prefConfig.gamepadMotionSensorsFallbackToDevice && defaultContext.sensorManager == null) {
+            defaultContext.sensorManager = deviceSensorManager;
+        }
+
+        if (!oscArrivalSent) {
+            oscArrivalSent = true;
+            sendOscControllerArrival();
+        }
+
         defaultContext.leftStickX = leftStickX;
         defaultContext.leftStickY = leftStickY;
 
@@ -2805,6 +2866,44 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         defaultContext.inputMap = buttonFlags;
 
         sendControllerInputPacket(defaultContext);
+    }
+
+    private void sendOscControllerArrival() {
+        short capabilities = MoonBridge.LI_CCAP_ANALOG_TRIGGERS;
+
+        // Report sensor capabilities if we have a sensor manager assigned
+        if (defaultContext.sensorManager != null) {
+            if (defaultContext.sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+                capabilities |= MoonBridge.LI_CCAP_ACCEL;
+            }
+            if (defaultContext.sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) {
+                capabilities |= MoonBridge.LI_CCAP_GYRO;
+            }
+        }
+
+        // Report rumble capability if vibrate for OSC is enabled
+        if (prefConfig.vibrateOsc) {
+            capabilities |= MoonBridge.LI_CCAP_RUMBLE;
+        }
+
+        // Use UNKNOWN type when emulating motion sensors so the host treats it as PS-compatible,
+        // otherwise report as Xbox
+        byte reportedType = (defaultContext.sensorManager != null) ?
+                MoonBridge.LI_CTYPE_UNKNOWN : MoonBridge.LI_CTYPE_XBOX;
+
+        // Report standard gamepad button flags
+        int supportedButtonFlags =
+                ControllerPacket.A_FLAG | ControllerPacket.B_FLAG |
+                ControllerPacket.X_FLAG | ControllerPacket.Y_FLAG |
+                ControllerPacket.UP_FLAG | ControllerPacket.DOWN_FLAG |
+                ControllerPacket.LEFT_FLAG | ControllerPacket.RIGHT_FLAG |
+                ControllerPacket.LB_FLAG | ControllerPacket.RB_FLAG |
+                ControllerPacket.LS_CLK_FLAG | ControllerPacket.RS_CLK_FLAG |
+                ControllerPacket.PLAY_FLAG | ControllerPacket.BACK_FLAG |
+                ControllerPacket.SPECIAL_BUTTON_FLAG;
+
+        conn.sendControllerArrivalEvent((byte) defaultContext.controllerNumber,
+                getActiveControllerMask(), reportedType, supportedButtonFlags, capabilities);
     }
 
     @Override

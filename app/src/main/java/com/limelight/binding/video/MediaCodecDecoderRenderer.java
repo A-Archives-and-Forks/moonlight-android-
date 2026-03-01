@@ -128,7 +128,17 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private int numFramesIn;
     private int numFramesOut;
 
-    private MediaCodecInfo findAvcDecoder() {
+    private MediaCodecInfo findAvcDecoder(PreferenceConfiguration prefs) {
+        // Check for manually selected decoder
+        if (prefs != null && prefs.videoDecoderName != null && !prefs.videoDecoderName.equals("auto")) {
+            MediaCodecInfo manualDecoder = MediaCodecHelper.findDecoderByName(prefs.videoDecoderName, "video/avc");
+            if (manualDecoder != null) {
+                LimeLog.info("Using manually selected AVC decoder: " + manualDecoder.getName());
+                return manualDecoder;
+            }
+            // Manual decoder doesn't support AVC - still find one for baseline protocol support
+            LimeLog.info("Manually selected decoder does not support AVC, using auto AVC decoder as fallback");
+        }
         MediaCodecInfo decoder = MediaCodecHelper.findProbableSafeDecoder("video/avc", MediaCodecInfo.CodecProfileLevel.AVCProfileHigh);
         if (decoder == null) {
             decoder = MediaCodecHelper.findFirstDecoder("video/avc");
@@ -223,6 +233,18 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             return null;
         }
 
+        // Check for manually selected decoder
+        if (prefs.videoDecoderName != null && !prefs.videoDecoderName.equals("auto")) {
+            MediaCodecInfo manualDecoder = MediaCodecHelper.findDecoderByName(prefs.videoDecoderName, "video/hevc");
+            if (manualDecoder != null) {
+                LimeLog.info("Using manually selected HEVC decoder: " + manualDecoder.getName());
+                return manualDecoder;
+            }
+            // Manual decoder doesn't support HEVC - don't fall through to auto
+            LimeLog.info("Manually selected decoder does not support HEVC");
+            return null;
+        }
+
         // We don't try the first HEVC decoder. We'd rather fall back to hardware accelerated AVC instead
         //
         // We need HEVC Main profile, so we could pass that constant to findProbableSafeDecoder, however
@@ -261,6 +283,18 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private MediaCodecInfo findAv1Decoder(PreferenceConfiguration prefs) {
         // For now, don't use AV1 unless explicitly requested
         if (prefs.videoFormat != PreferenceConfiguration.FormatOption.FORCE_AV1) {
+            return null;
+        }
+
+        // Check for manually selected decoder
+        if (prefs.videoDecoderName != null && !prefs.videoDecoderName.equals("auto")) {
+            MediaCodecInfo manualDecoder = MediaCodecHelper.findDecoderByName(prefs.videoDecoderName, "video/av01");
+            if (manualDecoder != null) {
+                LimeLog.info("Using manually selected AV1 decoder: " + manualDecoder.getName());
+                return manualDecoder;
+            }
+            // Manual decoder doesn't support AV1 - don't fall through to auto
+            LimeLog.info("Manually selected decoder does not support AV1");
             return null;
         }
 
@@ -312,7 +346,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         this.lastWindowVideoStats = new VideoStats();
         this.globalVideoStats = new VideoStats();
 
-        avcDecoder = findAvcDecoder();
+        avcDecoder = findAvcDecoder(prefs);
         if (avcDecoder != null) {
             LimeLog.info("Selected AVC decoder: "+avcDecoder.getName());
         }

@@ -895,6 +895,45 @@ public class MediaCodecHelper {
         }
     }
 
+    public static List<MediaCodecInfo> getAvailableDecoders(String mimeType) {
+        List<MediaCodecInfo> result = new LinkedList<>();
+        for (MediaCodecInfo codecInfo : getMediaCodecList()) {
+            if (codecInfo.isEncoder()) {
+                continue;
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (codecInfo.isAlias()) {
+                    continue;
+                }
+            }
+
+            for (String mime : codecInfo.getSupportedTypes()) {
+                if (mime.equalsIgnoreCase(mimeType)) {
+                    result.add(codecInfo);
+                }
+            }
+        }
+        return result;
+    }
+
+    public static MediaCodecInfo findDecoderByName(String decoderName, String mimeType) {
+        for (MediaCodecInfo codecInfo : getMediaCodecList()) {
+            if (codecInfo.isEncoder()) {
+                continue;
+            }
+
+            if (codecInfo.getName().equals(decoderName)) {
+                for (String mime : codecInfo.getSupportedTypes()) {
+                    if (mime.equalsIgnoreCase(mimeType)) {
+                        return codecInfo;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     // We declare this method as explicitly throwing Exception
     // since some bad decoders can throw IllegalArgumentExceptions unexpectedly
     // and we want to be sure all callers are handling this possibility

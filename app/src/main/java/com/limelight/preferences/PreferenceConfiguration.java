@@ -42,6 +42,7 @@ public class PreferenceConfiguration {
     static final String AUDIO_CONFIG_PREF_STRING = "list_audio_config";
     private static final String USB_DRIVER_PREF_SRING = "checkbox_usb_driver";
     private static final String VIDEO_FORMAT_PREF_STRING = "video_format";
+    static final String VIDEO_DECODER_PREF_STRING = "list_video_decoder";
     private static final String ONSCREEN_CONTROLLER_PREF_STRING = "checkbox_show_onscreen_controls";
     private static final String FLOATING_BUTTON_PREF_STRING = "checkbox_show_floating_button_controls";
     private static final String ANALOG_STICK_OPACITY_PREF_STRING = "seekbar_osc_analog_stick_deadzone";
@@ -86,6 +87,7 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_MULTI_CONTROLLER = true;
     private static final boolean DEFAULT_USB_DRIVER = true;
     private static final String DEFAULT_VIDEO_FORMAT = "auto";
+    static final String DEFAULT_VIDEO_DECODER = "auto";
 
     private static final boolean ONSCREEN_CONTROLLER_DEFAULT = false;
     private static final boolean FLOATING_BUTTON_DEFAULT = false;
@@ -171,6 +173,7 @@ public class PreferenceConfiguration {
     public boolean gamepadMotionSensors;
     public boolean gamepadTouchpadAsMouse;
     public boolean gamepadMotionSensorsFallbackToDevice;
+    public String videoDecoderName;
 
     public static boolean isNativeResolution(int width, int height) {
         // It's not a native resolution if it matches an existing resolution option
@@ -440,6 +443,7 @@ public class PreferenceConfiguration {
                 .remove(RESOLUTION_PREF_STRING)
                 .remove(FPS_PREF_STRING)
                 .remove(VIDEO_FORMAT_PREF_STRING)
+                .remove(VIDEO_DECODER_PREF_STRING)
                 .remove(ENABLE_HDR_PREF_STRING)
                 .remove(UNLOCK_FPS_STRING)
                 .remove(FULL_RANGE_PREF_STRING)
@@ -597,6 +601,7 @@ public class PreferenceConfiguration {
 
         config.videoFormat = getVideoFormatValue(context);
         config.framePacing = getFramePacingValue(context);
+        config.videoDecoderName = prefs.getString(VIDEO_DECODER_PREF_STRING, DEFAULT_VIDEO_DECODER);
 
         config.analogStickForScrolling = getAnalogStickForScrollingValue(context);
 

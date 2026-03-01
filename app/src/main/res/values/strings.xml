@@ -320,6 +320,10 @@
     <string name="videoformat_hevcalways">Prefer HEVC</string>
     <string name="videoformat_h264always">Prefer H.264</string>
 
+    <string name="title_video_decoder">Video decoder</string>
+    <string name="summary_video_decoder">Manually select a hardware video decoder. Leave on Auto unless troubleshooting.</string>
+    <string name="decoder_auto">Auto (recommended)</string>
+
     <string name="title_frame_pacing">Video frame pacing</string>
     <string name="summary_frame_pacing">Specify how to balance video latency and smoothness</string>
     <string name="pacing_latency">Prefer lowest latency</string>

@@ -915,6 +915,39 @@ public class StreamSettings extends Activity {
 
             addCustomResolutionsEntries();
 
+            // Dynamically populate the video decoder preference with available decoders
+            {
+                ListPreference decoderPref = (ListPreference) findPreference(PreferenceConfiguration.VIDEO_DECODER_PREF_STRING);
+                if (decoderPref != null) {
+                    java.util.LinkedHashSet<String> addedDecoders = new java.util.LinkedHashSet<>();
+                    String[] mimeTypes = {"video/avc", "video/hevc", "video/av01"};
+                    String[] codecLabels = {"AVC", "HEVC", "AV1"};
+                    for (int m = 0; m < mimeTypes.length; m++) {
+                        List<MediaCodecInfo> decoders = MediaCodecHelper.getAvailableDecoders(mimeTypes[m]);
+                        for (MediaCodecInfo info : decoders) {
+                            String name = info.getName();
+                            if (!addedDecoders.contains(name)) {
+                                addedDecoders.add(name);
+                                appendPreferenceEntry(decoderPref, name + " (" + codecLabels[m] + ")", name);
+                            } else {
+                                // Decoder already added for a different codec - update display name
+                                CharSequence[] entries = decoderPref.getEntries();
+                                CharSequence[] values = decoderPref.getEntryValues();
+                                for (int i = 0; i < values.length; i++) {
+                                    if (name.equals(values[i].toString()) && !entries[i].toString().contains(codecLabels[m])) {
+                                        String current = entries[i].toString();
+                                        // Append the additional codec label
+                                        entries[i] = current.substring(0, current.length() - 1) + "/" + codecLabels[m] + ")";
+                                        break;
+                                    }
+                                }
+                                decoderPref.setEntries(entries);
+                            }
+                        }
+                    }
+                }
+            }
+
             findPreference("export_osc").setOnPreferenceClickListener(preference -> {
                 Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);

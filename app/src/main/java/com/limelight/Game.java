@@ -2931,6 +2931,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             if (isVirtualControllerVisible) {
                 virtualController.hide();
             } else {
+                virtualController.refreshLayout();
                 virtualController.show();
             }
             isVirtualControllerVisible = !isVirtualControllerVisible; // Toggle the state

@@ -127,6 +127,7 @@ public class VirtualControllerConfigurationLoader {
         LeftTrigger button = new LeftTrigger(controller, layer, context);
         button.setText(text);
         button.setIcon(icon);
+        button.setUseRoundedRect(true);
         return button;
     }
 
@@ -139,6 +140,7 @@ public class VirtualControllerConfigurationLoader {
         RightTrigger button = new RightTrigger(controller, layer, context);
         button.setText(text);
         button.setIcon(icon);
+        button.setUseRoundedRect(true);
         return button;
     }
 
@@ -166,35 +168,38 @@ public class VirtualControllerConfigurationLoader {
         return new RightAnalogStickFree(controller, context);
     }
 
-    private static final int TRIGGER_L_BASE_X = 1;
-    private static final int TRIGGER_R_BASE_X = 92;
-    private static final int TRIGGER_DISTANCE = 23;
-    private static final int TRIGGER_BASE_Y = 31;
-    private static final int TRIGGER_WIDTH = 12;
-    private static final int TRIGGER_HEIGHT = 9;
+    private static final int TRIGGER_L_BASE_X = 14;
+    private static final int TRIGGER_R_BASE_X = 100;
+    private static final int TRIGGER_Y_TOP = 4;
+    private static final int TRIGGER_Y_BOTTOM = 14;
+    private static final int TRIGGER_WIDTH = 14;
+    private static final int TRIGGER_HEIGHT = 8;
 
     // Face buttons are defined based on the Y button (button number 9)
-    private static final int BUTTON_BASE_X = 106;
-    private static final int BUTTON_BASE_Y = 1;
+    private static final int BUTTON_BASE_X = 104;
+    private static final int BUTTON_BASE_Y = 32;
     private static final int BUTTON_SIZE = 10;
 
-    private static final int DPAD_BASE_X = 4;
-    private static final int DPAD_BASE_Y = 41;
-    private static final int DPAD_SIZE = 30;
+    private static final int DPAD_BASE_X = 13;
+    private static final int DPAD_BASE_Y = 28;
+    private static final int DPAD_SIZE = 22;
 
-    private static final int ANALOG_L_BASE_X = 6;
-    private static final int ANALOG_L_BASE_Y = 4;
-    private static final int ANALOG_R_BASE_X = 98;
-    private static final int ANALOG_R_BASE_Y = 42;
-    private static final int ANALOG_SIZE = 26;
+    private static final int ANALOG_L_BASE_X = 32;
+    private static final int ANALOG_L_BASE_Y = 54;
+    private static final int ANALOG_R_BASE_X = 82;
+    private static final int ANALOG_R_BASE_Y = 54;
+    private static final int ANALOG_SIZE = 18;
 
-    private static final int L3_R3_BASE_Y = 60;
+    private static final int L3_BASE_X = 54;
+    private static final int R3_BASE_X = 72;
+    private static final int L3_R3_BASE_Y = 62;
+    private static final int L3_R3_SIZE = 10;
 
-    private static final int START_X = 83;
-    private static final int BACK_X = 34;
-    private static final int START_BACK_Y = 64;
+    private static final int BACK_X = 70;
+    private static final int START_X = 54;
+    private static final int START_BACK_Y = 66;
     private static final int START_BACK_WIDTH = 12;
-    private static final int START_BACK_HEIGHT = 7;
+    private static final int START_BACK_HEIGHT = 6;
 
     public static void createDefaultLayout(final VirtualController controller, final Context context) {
 
@@ -260,33 +265,37 @@ public class VirtualControllerConfigurationLoader {
         controller.addElement(createLeftTrigger(
                 1, "LT", -1, controller, context),
                 screenScale(TRIGGER_L_BASE_X, height),
-                screenScale(TRIGGER_BASE_Y, height),
+                screenScale(TRIGGER_Y_TOP, height),
+                screenScale(TRIGGER_WIDTH, height),
+                screenScale(TRIGGER_HEIGHT, height)
+        );
+
+        DigitalButton lbButton = createDigitalButton(
+                VirtualControllerElement.EID_LB,
+                ControllerPacket.LB_FLAG, 0, 1, "LB", -1, controller, context);
+        lbButton.setUseRoundedRect(true);
+        controller.addElement(lbButton,
+                screenScale(TRIGGER_L_BASE_X, height),
+                screenScale(TRIGGER_Y_BOTTOM, height),
                 screenScale(TRIGGER_WIDTH, height),
                 screenScale(TRIGGER_HEIGHT, height)
         );
 
         controller.addElement(createRightTrigger(
                 1, "RT", -1, controller, context),
-                screenScale(TRIGGER_R_BASE_X + TRIGGER_DISTANCE, height) + rightDisplacement,
-                screenScale(TRIGGER_BASE_Y, height),
-                screenScale(TRIGGER_WIDTH, height),
-                screenScale(TRIGGER_HEIGHT, height)
-        );
-
-        controller.addElement(createDigitalButton(
-                VirtualControllerElement.EID_LB,
-                ControllerPacket.LB_FLAG, 0, 1, "LB", -1, controller, context),
-                screenScale(TRIGGER_L_BASE_X + TRIGGER_DISTANCE, height),
-                screenScale(TRIGGER_BASE_Y, height),
-                screenScale(TRIGGER_WIDTH, height),
-                screenScale(TRIGGER_HEIGHT, height)
-        );
-
-        controller.addElement(createDigitalButton(
-                VirtualControllerElement.EID_RB,
-                ControllerPacket.RB_FLAG, 0, 1, "RB", -1, controller, context),
                 screenScale(TRIGGER_R_BASE_X, height) + rightDisplacement,
-                screenScale(TRIGGER_BASE_Y, height),
+                screenScale(TRIGGER_Y_TOP, height),
+                screenScale(TRIGGER_WIDTH, height),
+                screenScale(TRIGGER_HEIGHT, height)
+        );
+
+        DigitalButton rbButton = createDigitalButton(
+                VirtualControllerElement.EID_RB,
+                ControllerPacket.RB_FLAG, 0, 1, "RB", -1, controller, context);
+        rbButton.setUseRoundedRect(true);
+        controller.addElement(rbButton,
+                screenScale(TRIGGER_R_BASE_X, height) + rightDisplacement,
+                screenScale(TRIGGER_Y_BOTTOM, height),
                 screenScale(TRIGGER_WIDTH, height),
                 screenScale(TRIGGER_HEIGHT, height)
         );
@@ -321,18 +330,22 @@ public class VirtualControllerConfigurationLoader {
             );
         }
 
-        controller.addElement(createDigitalButton(
+        DigitalButton backButton = createDigitalButton(
                 VirtualControllerElement.EID_BACK,
-                ControllerPacket.BACK_FLAG, 0, 2, "BACK", -1, controller, context),
+                ControllerPacket.BACK_FLAG, 0, 2, "BACK", -1, controller, context);
+        backButton.setUseRoundedRect(true);
+        controller.addElement(backButton,
                 screenScale(BACK_X, height),
                 screenScale(START_BACK_Y, height),
                 screenScale(START_BACK_WIDTH, height),
                 screenScale(START_BACK_HEIGHT, height)
         );
 
-        controller.addElement(createDigitalButton(
+        DigitalButton startButton = createDigitalButton(
                 VirtualControllerElement.EID_START,
-                ControllerPacket.PLAY_FLAG, 0, 3, "START", -1, controller, context),
+                ControllerPacket.PLAY_FLAG, 0, 3, "START", -1, controller, context);
+        startButton.setUseRoundedRect(true);
+        controller.addElement(startButton,
                 screenScale(START_X, height) + rightDisplacement,
                 screenScale(START_BACK_Y, height),
                 screenScale(START_BACK_WIDTH, height),
@@ -343,19 +356,19 @@ public class VirtualControllerConfigurationLoader {
             controller.addElement(createDigitalButton(
                     VirtualControllerElement.EID_LSB,
                     ControllerPacket.LS_CLK_FLAG, 0, 1, "L3", -1, controller, context),
-                    screenScale(TRIGGER_L_BASE_X, height),
+                    screenScale(L3_BASE_X, height),
                     screenScale(L3_R3_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
+                    screenScale(L3_R3_SIZE, height),
+                    screenScale(L3_R3_SIZE, height)
             );
 
             controller.addElement(createDigitalButton(
                     VirtualControllerElement.EID_RSB,
                     ControllerPacket.RS_CLK_FLAG, 0, 1, "R3", -1, controller, context),
-                    screenScale(TRIGGER_R_BASE_X + TRIGGER_DISTANCE, height) + rightDisplacement,
+                    screenScale(R3_BASE_X, height) + rightDisplacement,
                     screenScale(L3_R3_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
+                    screenScale(L3_R3_SIZE, height),
+                    screenScale(L3_R3_SIZE, height)
             );
         }
 

@@ -44,6 +44,7 @@ public class DigitalButton extends VirtualControllerElement {
     private List<DigitalButtonListener> listeners = new ArrayList<>();
     private String text = "";
     private int icon = -1;
+    private boolean useRoundedRect = false;
     private long timerLongClickTimeout = 3000;
     private final Runnable longClickRunnable = new Runnable() {
         @Override
@@ -128,6 +129,11 @@ public class DigitalButton extends VirtualControllerElement {
         invalidate();
     }
 
+    public void setUseRoundedRect(boolean useRoundedRect) {
+        this.useRoundedRect = useRoundedRect;
+        invalidate();
+    }
+
     public void setIcon(int id) {
         this.icon = id;
         invalidate();
@@ -149,8 +155,12 @@ public class DigitalButton extends VirtualControllerElement {
         rect.right = getWidth() - rect.left;
         rect.bottom = getHeight() - rect.top;
 
-        canvas.drawOval(rect, paint);
-
+        if (useRoundedRect) {
+            float cornerRadius = Math.min(getWidth(), getHeight()) * 0.25f;
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint);
+        } else {
+            canvas.drawOval(rect, paint);
+        }
         if (icon != -1) {
             Drawable d = getResources().getDrawable(icon);
             d.setBounds(5, 5, getWidth() - 5, getHeight() - 5);
